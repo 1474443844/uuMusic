@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">UUMusic</string>
+    <string name="edit_qq_title">Please enter your QQ below</string>
+    <string name="edit_qq_content">Use QQ to collect your information</string>
+    <string name="edit_qq_hint">QQ</string>
+    <string name="edit_qq_confirm">Confirm</string>
+    <string name="edit_qq_dismiss">Dismiss</string>
+    <string name="not_login">Haven\'t logged in</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UUMusic</string>
+    <string name="edit_qq_title">请输入您的QQ</string>
+    <string name="edit_qq_content">QQ将被用来同步您的QQ歌单</string>
+    <string name="edit_qq_hint">QQ</string>
+    <string name="edit_qq_confirm">确定</string>
+    <string name="edit_qq_dismiss">取消</string>
+    <string name="not_login">还未登录</string>
+</resources>
