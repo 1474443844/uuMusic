@@ -29,6 +29,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,9 +57,9 @@ class DiskDisplayActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val diskName by mutableStateOf(intent.getStringExtra("name"))
         val diskCover by mutableStateOf(intent.getStringExtra("cover"))
-        var songList by mutableStateOf<List<SongInfo>>(emptyList())
-        var showErroInfo by mutableStateOf(false)
-        var erroInfo by mutableStateOf("")
+        var songList = emptyList<SongInfo>().toMutableStateList()
+        var showErrorInfo by mutableStateOf(false)
+        var errorInfo by mutableStateOf("")
         enableEdgeToEdge()
         setContent {
             UUMusicTheme {
@@ -108,9 +109,9 @@ class DiskDisplayActivity : ComponentActivity() {
                                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                             }
                         } else {
-                            if (showErroInfo){
+                            if (showErrorInfo){
                                 item {
-                                    Text(text = erroInfo, modifier = Modifier.padding(16.dp))
+                                    Text(text = errorInfo, modifier = Modifier.padding(16.dp))
                                 }
                             }
 
@@ -125,13 +126,13 @@ class DiskDisplayActivity : ComponentActivity() {
                 val diskDetail = getDiskDetail(id)
 //                diskName = diskDetail.title
 //                diskCover = diskDetail.picurl
-                songList = diskDetail.songs
+                songList = diskDetail.songs.toMutableStateList()
             }catch (e:Exception){
                 println(e.message)
                 val error = JSONObject(e.message!!)
                 if(error.getInt("code") == 600){
-                    showErroInfo = true
-                    erroInfo = error.getString("message")
+                    showErrorInfo = true
+                    errorInfo = error.getString("message")
                 }
             }
         }

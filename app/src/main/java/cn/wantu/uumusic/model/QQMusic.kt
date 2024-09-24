@@ -52,6 +52,7 @@ suspend fun getQQInfo(qq: String): QQInfo = withContext(Dispatchers.IO) {
         json.decodeFromString<List<DiskInfo>>(data.optString("likediss", "[]"))
     )
 }
+
 suspend fun searchMusicByName(name: String): List<SongInfo> = withContext(Dispatchers.IO){
     val result = baseRequest("/search/song?word=$name")
     json.decodeFromString<List<SongInfo>>(result.getString("data"))
@@ -67,6 +68,21 @@ suspend fun getDiskDetail(id: Long): DiskDetail = withContext(Dispatchers.IO){
 
 suspend fun getMusicDownloadUrl(id: Long, q: Int = 8): String = withContext(Dispatchers.IO){
     val data = baseRequest("/geturl?id=$id&quality=$q").getJSONObject("data")
-    data.getString("url")
+    var url = data.getString("url")
+    if(!checkDownloadUrl(url)){
+        url = baseRequest("/geturl?id=$id").getJSONObject("data").getString("url")
+    }
+    url
+}
 
+suspend fun checkDownloadUrl(url: String): Boolean = withContext(Dispatchers.IO){
+    val request = Request.Builder().url(url).head().build()
+    UUApp.getClient().newCall(request).execute().use { response ->
+        if (response.isSuccessful) {
+            !response.headers("Content-Type").contains("application/json")
+        } else {
+            println("Request failed: ${response.code}")
+            false
+        }
+    }
 }

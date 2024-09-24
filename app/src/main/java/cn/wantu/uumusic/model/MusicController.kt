@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class MusicController {
     private val mediaPlayer = MediaPlayer()
+
     companion object{
         var isPlaying by mutableStateOf(false)
         var songIndex by mutableIntStateOf(0)
@@ -21,12 +22,12 @@ class MusicController {
         var progress by mutableFloatStateOf(0f)
         var isPrepared by mutableStateOf(false)
     }
+
     fun playAtNow(song: SongInfo) {
         songList.indexOfFirst {
             it.id == song.id
         }.also { index ->
             if (index != -1) {
-                println("index: $index songList.size: ${songList.size}")
                 songIndex = index
                 playNew()
             } else {
@@ -38,6 +39,7 @@ class MusicController {
             }
         }
     }
+
     fun playAtNext(song: SongInfo) {
         songList.remove(song)
         songList.add(songIndex+1, song)
@@ -48,14 +50,13 @@ class MusicController {
     }
 
     private fun playNew(){
-        println("songIndex: $songIndex, songList.size: ${songList.size}")
         if(songIndex == songList.size){
             songIndex = 0
-            println("I am here")
         }
         val coroutineScope = CoroutineScope(Dispatchers.IO)
         coroutineScope.launch {
             reset()
+            isPrepared = false
             setDataSource(getMusicDownloadUrl(songList[songIndex].id))
             prepareAsync()
             setOnPreparedListener {
@@ -93,14 +94,13 @@ class MusicController {
         }
     }
 
-    fun getUserSetting() = 0; // 0 -> 顺序播放, 1 -> 单曲循环
+    fun getUserSetting() = 0 // 0 -> 顺序播放, 1 -> 单曲循环
 
     fun setOnCompletionListener(listener: () -> Unit){
         mediaPlayer.setOnCompletionListener {
             isPlaying = false
             when(getUserSetting()) {
                 0 -> {
-                    println("I am there")
                     songIndex++
                     playNew()
                 }
