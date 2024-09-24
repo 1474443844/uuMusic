@@ -55,9 +55,9 @@ class DiskDisplayActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val diskName by mutableStateOf(intent.getStringExtra("name"))
-        val diskCover by mutableStateOf(intent.getStringExtra("cover"))
-        var songList = emptyList<SongInfo>().toMutableStateList()
+        val diskName = intent.getStringExtra("name")
+        val diskCover = intent.getStringExtra("cover")
+        val songList = emptyList<SongInfo>().toMutableStateList()
         var showErrorInfo by mutableStateOf(false)
         var errorInfo by mutableStateOf("")
         enableEdgeToEdge()
@@ -76,6 +76,7 @@ class DiskDisplayActivity : ComponentActivity() {
                     },
                     bottomBar = { MusicControllerBar() }
                 ) { paddingValues ->
+
                     LazyColumn(
                         contentPadding = paddingValues,
                         modifier = Modifier
@@ -126,7 +127,7 @@ class DiskDisplayActivity : ComponentActivity() {
                 val diskDetail = getDiskDetail(id)
 //                diskName = diskDetail.title
 //                diskCover = diskDetail.picurl
-                songList = diskDetail.songs.toMutableStateList()
+                songList.addAll(diskDetail.songs)
             }catch (e:Exception){
                 println(e.message)
                 val error = JSONObject(e.message!!)
