@@ -42,7 +42,14 @@ class MusicController {
 
     fun playAtNext(song: SongInfo) {
         songList.remove(song)
-        songList.add(songIndex+1, song)
+        if (songList.size == songIndex){
+            songList.add(song)
+        }else{
+            songList.add(songIndex+1, song)
+        }
+        if(songList.size == 1){
+            playNew()
+        }
         setOnCompletionListener {
             songIndex++
             playNew()
@@ -57,7 +64,10 @@ class MusicController {
         coroutineScope.launch {
             reset()
             isPrepared = false
-            setDataSource(getMusicDownloadUrl(songList[songIndex].id))
+            println(songList[songIndex])
+            val url = getMusicDownloadUrl(songList[songIndex].id)
+            println(url)
+            setDataSource(url)
             prepareAsync()
             setOnPreparedListener {
                 progress = 0f
