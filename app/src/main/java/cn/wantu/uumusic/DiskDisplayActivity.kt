@@ -132,7 +132,9 @@ class DiskDisplayActivity : ComponentActivity() {
                                     song,
                                     modifier = Modifier.fillMaxWidth().padding(10.dp).clickable {
                                         mediaPlayer.playAtNow(song)
-                                    })
+                                    }){
+                                    mediaPlayer.playAtNext(song)
+                                }
                                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                             }
                         } else {

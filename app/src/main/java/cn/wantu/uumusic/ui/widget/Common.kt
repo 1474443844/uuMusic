@@ -187,7 +187,7 @@ fun PlaylistItem(diskInfo: DiskInfo, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun SongItem(songInfo: SongInfo, modifier: Modifier = Modifier) {
+fun SongItem(songInfo: SongInfo, modifier: Modifier = Modifier, play: () -> Unit = {}) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.padding(vertical = 8.dp)
@@ -201,7 +201,7 @@ fun SongItem(songInfo: SongInfo, modifier: Modifier = Modifier) {
                 .clip(RoundedCornerShape(8.dp))
         )
         Column(
-            modifier = Modifier.padding(start = 12.dp)
+            modifier = Modifier.padding(start = 12.dp).weight(1f)
         ) {
             Text(
                 text = songInfo.song,
@@ -213,6 +213,9 @@ fun SongItem(songInfo: SongInfo, modifier: Modifier = Modifier) {
                 fontSize = 14.sp,
                 color = Color.Gray
             )
+        }
+        IconButton(onClick = { play() }) {
+            Image(painter = painterResource(R.drawable.add_music), contentDescription = "下一首播放")
         }
     }
 }
