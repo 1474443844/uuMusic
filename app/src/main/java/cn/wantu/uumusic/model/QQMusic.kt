@@ -58,8 +58,8 @@ suspend fun searchMusicByName(name: String): List<SongInfo> = withContext(Dispat
     json.decodeFromString<List<SongInfo>>(result.getString("data"))
 }
 
-suspend fun getDiskDetail(id: Long, /* page: Int = 1 */): DiskDetail = withContext(Dispatchers.IO){
-    val data = baseRequest("/dissinfo?id=$id").getJSONObject("data")
+suspend fun getDiskDetail(id: Long, page: Int = 1): DiskDetail = withContext(Dispatchers.IO){
+    val data = baseRequest("/dissinfo?id=$id&page=$page").getJSONObject("data")
     val info = data.getJSONObject("info")
     DiskDetail(picurl = info.getString("picurl"), title = info.getString("title"),
         songnum = info.getInt("songnum"), songs = json.decodeFromString<List<SongInfo>>(data.getString("list"))

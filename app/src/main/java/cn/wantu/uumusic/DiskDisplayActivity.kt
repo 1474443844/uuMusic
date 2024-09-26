@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -26,9 +27,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +55,9 @@ import org.json.JSONObject
 class DiskDisplayActivity : ComponentActivity() {
 
     private var mediaPlayer = UUApp.getMediaPlayer()
-
+    private var songSize = -1
+    private var page = 1
+    private var id = 0L
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,8 +66,27 @@ class DiskDisplayActivity : ComponentActivity() {
         val songList = emptyList<SongInfo>().toMutableStateList()
         var showErrorInfo by mutableStateOf(false)
         var errorInfo by mutableStateOf("")
+
         enableEdgeToEdge()
         setContent {
+            val listState = rememberLazyListState()
+            var isLoading by remember { mutableStateOf(false) }
+            LaunchedEffect(listState) {
+                snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
+                    .collect { visibleItemCount ->
+                        val totalItemCount = listState.layoutInfo.totalItemsCount
+                        if(totalItemCount < songSize){
+                            if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
+                                isLoading = true
+                                val diskDetail = getDiskDetail(id, page)
+                                songList.addAll(diskDetail.songs)
+                                page++
+                                isLoading = false
+                            }
+                        }
+                    }
+            }
+
             UUMusicTheme {
                 Scaffold(
                     topBar = {
@@ -78,6 +103,7 @@ class DiskDisplayActivity : ComponentActivity() {
                 ) { paddingValues ->
 
                     LazyColumn(
+                        state = listState,
                         contentPadding = paddingValues,
                         modifier = Modifier
                             .fillMaxSize()
@@ -121,13 +147,15 @@ class DiskDisplayActivity : ComponentActivity() {
                 }
             }
         }
-        val id = intent.getLongExtra("id", 0)
+        id = intent.getLongExtra("id", 0)
         lifecycleScope.launch {
             try {
-                val diskDetail = getDiskDetail(id)
+                val diskDetail = getDiskDetail(id, page)
+                songSize = diskDetail.songnum
 //                diskName = diskDetail.title
 //                diskCover = diskDetail.picurl
                 songList.addAll(diskDetail.songs)
+                page++
             }catch (e:Exception){
                 println(e.message)
                 val error = JSONObject(e.message!!)
