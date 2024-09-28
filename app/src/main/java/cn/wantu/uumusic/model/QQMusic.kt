@@ -65,6 +65,16 @@ suspend fun getDiskDetail(id: Long, page: Int = 1): DiskDetail = withContext(Dis
         songnum = info.getInt("songnum"), songs = json.decodeFromString<List<SongInfo>>(data.getString("list"))
     )
 }
+data class MediaInfo(val song: String, val singer: String, val album: String, val url: String, val cover: String)
+suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dispatchers.IO){
+    val data = baseRequest("/geturl?id=$id&quality=$q").getJSONObject("data")
+    var url = data.getString("url")
+    if(!checkDownloadUrl(url)){
+        url = baseRequest("/geturl?id=$id").getJSONObject("data").getString("url")
+    }
+    MediaInfo(song = data.getString("song"), singer = data.getString("singer"),
+        album = data.getString("album"), url = url, cover = data.getString("cover"))
+}
 
 suspend fun getMusicDownloadUrl(id: Long, q: Int = 8): String = withContext(Dispatchers.IO){
     val data = baseRequest("/geturl?id=$id&quality=$q").getJSONObject("data")

@@ -52,7 +52,7 @@ import cn.wantu.uumusic.model.getQQInfo
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import cn.wantu.uumusic.ui.widget.ArtistSection
 import cn.wantu.uumusic.ui.widget.BannerSection
-import cn.wantu.uumusic.ui.widget.MusicControllerBar
+import cn.wantu.uumusic.ui.widget.NewMusicControllerBar
 import cn.wantu.uumusic.ui.widget.NewSongsSection
 import cn.wantu.uumusic.ui.widget.PlaylistItem
 import cn.wantu.uumusic.ui.widget.SectionTitle
@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
             topBar = topBar(),
             bottomBar = {
                 BottomAppBar {
-                    MusicControllerBar()
+                    NewMusicControllerBar()
                 }
             },
         ) { paddingValues ->

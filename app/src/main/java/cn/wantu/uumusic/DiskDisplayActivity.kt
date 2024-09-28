@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.toMutableStateList
@@ -44,17 +45,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import cn.wantu.uumusic.data.SongInfo
+import cn.wantu.uumusic.model.MusicPlayer
 import cn.wantu.uumusic.model.getDiskDetail
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
-import cn.wantu.uumusic.ui.widget.MusicControllerBar
+import cn.wantu.uumusic.ui.widget.NewMusicControllerBar
 import cn.wantu.uumusic.ui.widget.SongItem
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class DiskDisplayActivity : ComponentActivity() {
-
-    private var mediaPlayer = UUApp.getMediaPlayer()
     private var songSize = -1
     private var page = 1
     private var id = 0L
@@ -69,6 +69,7 @@ class DiskDisplayActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
+            val scope = rememberCoroutineScope()
             val listState = rememberLazyListState()
             var isLoading by remember { mutableStateOf(false) }
             LaunchedEffect(listState) {
@@ -99,7 +100,7 @@ class DiskDisplayActivity : ComponentActivity() {
                                 }
                         })
                     },
-                    bottomBar = { MusicControllerBar() }
+                    bottomBar = { NewMusicControllerBar() }
                 ) { paddingValues ->
 
                     LazyColumn(
@@ -131,9 +132,13 @@ class DiskDisplayActivity : ComponentActivity() {
                                 SongItem(
                                     song,
                                     modifier = Modifier.fillMaxWidth().padding(10.dp).clickable {
-                                        mediaPlayer.playAtNow(song)
+                                        scope.launch {
+                                            MusicPlayer.playAtNow(song.id)
+                                        }
                                     }){
-                                    mediaPlayer.playAtNext(song)
+                                    scope.launch {
+                                        MusicPlayer.playAtNext(song.id)
+                                    }
                                 }
                                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                             }

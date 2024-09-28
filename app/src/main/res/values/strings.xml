@@ -6,4 +6,5 @@
     <string name="edit_qq_confirm">Confirm</string>
     <string name="edit_qq_dismiss">Dismiss</string>
     <string name="not_login">Haven\'t logged in</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>

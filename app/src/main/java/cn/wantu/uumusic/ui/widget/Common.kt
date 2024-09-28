@@ -1,6 +1,7 @@
 package cn.wantu.uumusic.ui.widget
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,36 +37,36 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.wantu.uumusic.R
-import cn.wantu.uumusic.UUApp
 import cn.wantu.uumusic.data.DiskInfo
 import cn.wantu.uumusic.data.SongInfo
-import cn.wantu.uumusic.model.MusicController.Companion.isPlaying
-import cn.wantu.uumusic.model.MusicController.Companion.isPrepared
-import cn.wantu.uumusic.model.MusicController.Companion.progress
-import cn.wantu.uumusic.model.MusicController.Companion.songIndex
-import cn.wantu.uumusic.model.MusicController.Companion.songList
+import cn.wantu.uumusic.model.MusicPlayer
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun MusicControllerBar() {
-    val mediaPlayer = UUApp.getMediaPlayer()
+fun NewMusicControllerBar() {
+    val player = MusicPlayer.getInstance()
     BottomAppBar(
         content = {
-            if (songList.isNotEmpty()) {
-                val songInfo = songList[songIndex]
+            if (player.mediaItemCount > 0 || !MusicPlayer.isPrepared) {
+                val mediaItem = player.currentMediaItem
+                val mediaMetadata = mediaItem?.mediaMetadata
+                val extras = mediaMetadata?.extras
                 AsyncImage(
-                    model = songInfo.cover,
+                    model = extras?.getString("cover"),
                     contentDescription = "Album",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .padding(8.dp)
                         .size(48.dp)
+                        .clickable {
+                            MusicPlayer.showPlayList()
+                        }
                 )
                 Text(
-                    text = "${songInfo.song} - ${songInfo.singer}",
+                    text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 16.dp)
@@ -75,31 +76,31 @@ fun MusicControllerBar() {
 //                }
                 Box(contentAlignment = Alignment.Center) {
                     val scope = rememberCoroutineScope()
-                    LaunchedEffect(isPlaying) {
+                    LaunchedEffect(MusicPlayer.isPlaying) {
                         scope.launch {
-                            while (isPlaying) {
-                                progress = mediaPlayer.getCurrentPosition()
-                                    .toFloat() / mediaPlayer.getDuration()
+                            while (MusicPlayer.isPlaying) {
+                                MusicPlayer.progress = player.currentPosition.toFloat()/player.duration
                                 delay(200)
                             }
                         }
                     }
-                    if (isPrepared) {
+                    println("isPrepared: ${MusicPlayer.isPrepared}")
+                    if (MusicPlayer.isPrepared) {
                         CircularProgressIndicator(
-                            progress = { progress },
+                            progress = { MusicPlayer.progress },
                             trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
                         )
                     } else {
                         CircularProgressIndicator()
                     }
                     IconButton(onClick = {
-                        if (isPlaying) {
-                            mediaPlayer.pause()
+                        if (MusicPlayer.isPlaying) {
+                            player.pause()
                         } else {
-                            mediaPlayer.start()
+                            player.play()
                         }
                     }) {
-                        if (isPlaying) {
+                        if (MusicPlayer.isPlaying) {
                             Image(
                                 painter = painterResource(R.drawable.baseline_pause_24),
                                 contentDescription = "暂停"
