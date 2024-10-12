@@ -3,6 +3,7 @@ package cn.wantu.uumusic
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -58,6 +59,7 @@ class DiskDisplayActivity : ComponentActivity() {
     private var songSize = -1
     private var page = 1
     private var id = 0L
+    var isExpanded by mutableStateOf(false)
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +102,7 @@ class DiskDisplayActivity : ComponentActivity() {
                                 }
                         })
                     },
-                    bottomBar = { NewMusicControllerBar() }
+                    bottomBar = { NewMusicControllerBar(isExpanded, onExpand = { isExpanded = !isExpanded }) }
                 ) { paddingValues ->
 
                     LazyColumn(
@@ -172,6 +174,15 @@ class DiskDisplayActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+
+        if (keyCode == KeyEvent.KEYCODE_BACK && isExpanded) {
+            isExpanded = false
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
     companion object{
         fun showDiskDetails(context: Context, id:Long, name:String, cover: String){

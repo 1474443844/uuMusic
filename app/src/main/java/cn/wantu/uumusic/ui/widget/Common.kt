@@ -1,5 +1,11 @@
 package cn.wantu.uumusic.ui.widget
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,14 +19,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,89 +53,121 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun NewMusicControllerBar() {
+fun NewMusicControllerBar(isExpanded: Boolean = false, onExpand: () -> Unit = {}) {
     val player = MusicPlayer.getInstance()
-    BottomAppBar(
-        content = {
-            if (player.mediaItemCount > 0 || !MusicPlayer.isPrepared) {
-                val mediaItem = player.currentMediaItem
-                val mediaMetadata = mediaItem?.mediaMetadata
-                val extras = mediaMetadata?.extras
-                AsyncImage(
-                    model = extras?.getString("cover"),
-                    contentDescription = "Album",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(48.dp)
-                        .clickable {
-                            MusicPlayer.showPlayList()
-                        }
-                )
-                Text(
-                    text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp)
-                )
-//                IconButton(onClick = onPreviousClicked) {
-//                    Icon(imageVector = Icons.Default.SkipPrevious, contentDescription = "上一首")
-//                }
-                Box(contentAlignment = Alignment.Center) {
-                    val scope = rememberCoroutineScope()
-                    LaunchedEffect(MusicPlayer.isPlaying) {
-                        scope.launch {
-                            while (MusicPlayer.isPlaying) {
-                                MusicPlayer.progress = player.currentPosition.toFloat()/player.duration
-                                delay(200)
-                            }
-                        }
-                    }
-                    println("isPrepared: ${MusicPlayer.isPrepared}")
-                    if (MusicPlayer.isPrepared) {
-                        CircularProgressIndicator(
-                            progress = { MusicPlayer.progress },
-                            trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
+    Column {
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = fadeIn() + slideInVertically(
+                // 从按钮下方向上展开
+                initialOffsetY = { it },
+                animationSpec = tween(durationMillis = 300)
+            ),
+            exit = fadeOut() + slideOutVertically(
+                // 向下收回
+                targetOffsetY = { it },
+                animationSpec = tween(durationMillis = 300)
+            ),
+
+        ) {
+            // 列表项，可以根据需求自定义
+            Card(modifier = Modifier.fillMaxWidth().height(200.dp).padding(8.dp), elevation = CardDefaults.cardElevation(8.dp)) {
+                LazyColumn {
+                    items(MusicPlayer.playList.size){ i ->
+                        Text(
+                            text = MusicPlayer.playList[i],
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { MusicPlayer.playIndex(i) }
+                                .padding(8.dp)
                         )
-                    } else {
-                        CircularProgressIndicator()
-                    }
-                    IconButton(onClick = {
-                        if (MusicPlayer.isPlaying) {
-                            player.pause()
-                        } else {
-                            player.play()
-                        }
-                    }) {
-                        if (MusicPlayer.isPlaying) {
-                            Image(
-                                painter = painterResource(R.drawable.baseline_pause_24),
-                                contentDescription = "暂停"
-                            )
-                        } else {
-                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "播放")
-                        }
                     }
                 }
-
-//                IconButton(onClick = onNextClicked) {
-//                    Icon(imageVector = Icons.Default.SkipNext, contentDescription = "下一首")
-//                }
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.baseline_library_music_24),
-                    contentDescription = "Album",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(48.dp)
-                )
-                Text(
-                    text = "UU音乐 听你想听"
-                )
             }
+
         }
-    )
+        BottomAppBar(
+            content = {
+                if (player.mediaItemCount > 0 || !MusicPlayer.isPrepared) {
+                    val mediaItem = player.currentMediaItem
+                    val mediaMetadata = mediaItem?.mediaMetadata
+                    val extras = mediaMetadata?.extras
+                    AsyncImage(
+                        model = extras?.getString("cover"),
+                        contentDescription = "Album",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(48.dp)
+                            .clickable {
+                                MusicPlayer.showPlayList()
+                            }
+                    )
+                    Text(
+                        text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 8.dp)
+                    )
+//                IconButton(onClick = {
+//                    MusicPlayer.playPrevious()
+//                }) {
+//                    Image(painter = painterResource(R.drawable.baseline_skip_previous_24), contentDescription = "上一首")
+//                }
+                    Box(contentAlignment = Alignment.Center) {
+                        val scope = rememberCoroutineScope()
+                        LaunchedEffect(MusicPlayer.isPlaying) {
+                            scope.launch {
+                                while (MusicPlayer.isPlaying) {
+                                    MusicPlayer.progress = player.currentPosition.toFloat()/player.duration
+                                    delay(200)
+                                }
+                            }
+                        }
+//                    println("isPrepared: ${MusicPlayer.isPrepared}")
+                        if (MusicPlayer.isPrepared) {
+                            CircularProgressIndicator(
+                                progress = { MusicPlayer.progress },
+                                trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
+                            )
+                        } else {
+                            CircularProgressIndicator()
+                        }
+                        IconButton(onClick = {
+                            if (MusicPlayer.isPlaying) {
+                                player.pause()
+                            } else {
+                                player.play()
+                            }
+                        }) {
+                            Image(
+                                painter = painterResource(if(MusicPlayer.isPlaying) R.drawable.baseline_pause_24 else R.drawable.baseline_play_arrow_24),
+                                contentDescription = if(MusicPlayer.isPlaying) "暂停" else "播放"
+                            )
+                        }
+                    }
+
+                    IconButton(onClick = { onExpand() }) {
+                        Image(painter = painterResource(R.drawable.baseline_music_list_24), contentDescription = "播放列表")
+                    }
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.baseline_music_disc_24),
+                        contentDescription = "Album",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(36.dp)
+                    )
+                    Text(
+                        text = "UU音乐 听你想听"
+                    )
+                }
+            }
+        )
+    }
+
 }
 
 
@@ -202,7 +241,9 @@ fun SongItem(songInfo: SongInfo, modifier: Modifier = Modifier, play: () -> Unit
                 .clip(RoundedCornerShape(8.dp))
         )
         Column(
-            modifier = Modifier.padding(start = 12.dp).weight(1f)
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .weight(1f)
         ) {
             Text(
                 text = songInfo.song,
@@ -216,7 +257,7 @@ fun SongItem(songInfo: SongInfo, modifier: Modifier = Modifier, play: () -> Unit
             )
         }
         IconButton(onClick = { play() }) {
-            Image(painter = painterResource(R.drawable.add_music), contentDescription = "下一首播放")
+            Image(painter = painterResource(R.drawable.baseline_add_music_24), contentDescription = "下一首播放")
         }
     }
 }

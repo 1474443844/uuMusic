@@ -24,6 +24,7 @@ class MusicPlayer {
         var isPlaying by mutableStateOf(false)
         var isPrepared by mutableStateOf(true)
         var progress by mutableFloatStateOf(0f)
+        var playList by mutableStateOf(emptyList<String>())
         private var player: ExoPlayer
         init {
             val httpDataSourceFactory = DefaultHttpDataSource.Factory()
@@ -37,7 +38,6 @@ class MusicPlayer {
                 override fun onIsPlayingChanged(isPlayingNow: Boolean) {
                     isPlaying = isPlayingNow
                 }
-
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
 //                    println("Playback state changed: $playbackState")
@@ -89,6 +89,7 @@ class MusicPlayer {
 //                    isPrepared = !isLoading
 //                }
             })
+            player.repeatMode = Player.REPEAT_MODE_ALL
             player.prepare()
         }
         fun getInstance() = player
@@ -110,17 +111,27 @@ class MusicPlayer {
                 .setMediaMetadata(mediaMetadata)
                 .build()
         }
+        fun playPrevious(){
+            player.seekToPrevious()
+        }
+        fun playNext(){
+            player.seekToNext()
+        }
         suspend fun playAtNow(id: Long){
             progress = 0f
             if(player.mediaItemCount == 0){
                 player.addMediaItem(createMediaItem(id))
-                return player.play()
+                player.play()
+                updatePlayList()
+                return
             }
             val i = findMediaItemIndex(id)
             if (i == -1){
                 player.addMediaItem(player.currentMediaItemIndex+1, createMediaItem(id))
                 player.seekToNext()
-                return player.play()
+                player.play()
+                updatePlayList()
+                return
             }
             println("find index is $i")
             player.seekTo(i, 0)
@@ -132,10 +143,13 @@ class MusicPlayer {
             }
             val i = findMediaItemIndex(id)
             if(i == -1){
-                return player.addMediaItem(player.currentMediaItemIndex+1, createMediaItem(id))
+                player.addMediaItem(player.currentMediaItemIndex+1, createMediaItem(id))
+                updatePlayList()
+                return
             }
             println("find index is $i")
             player.moveMediaItem(i, player.currentMediaItemIndex+1)
+            updatePlayList()
         }
         private fun findMediaItemIndex(id: Long): Int {
             for (i in 0 until player.mediaItemCount) {
@@ -145,6 +159,18 @@ class MusicPlayer {
                 }
             }
             return -1
+        }
+        private fun updatePlayList(){
+            val list = emptyList<String>().toMutableList()
+            val mediaItemCount = player.mediaItemCount
+            for (i in 0 until mediaItemCount) {
+                val mediaMetadata = player.getMediaItemAt(i).mediaMetadata
+                list.add("${mediaMetadata.title} - ${mediaMetadata.artist}")
+            }
+            playList = list
+        }
+        fun playIndex(index: Int){
+            player.seekTo(index, 0)
         }
         fun showPlayList(){
             val mediaItemCount = player.mediaItemCount

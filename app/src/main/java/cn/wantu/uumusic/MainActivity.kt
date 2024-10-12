@@ -25,7 +25,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,7 +82,6 @@ class MainActivity : ComponentActivity() {
         if (file.exists()) json.decodeFromString(file.readText())
         else listOf(DiskInfo(id = 0, title = "暂无", picurl = ""))
     )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (isLogin) {
@@ -106,9 +104,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = topBar(),
             bottomBar = {
-                BottomAppBar {
-                    NewMusicControllerBar()
-                }
+                NewMusicControllerBar(isExpanded, onExpand = { isExpanded = !isExpanded })
             },
         ) { paddingValues ->
             EditQQDialog(showDialog = showDialog,
@@ -203,11 +199,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (isExpanded) {
-                isExpanded = false
-                return true
-            }
+        if (keyCode == KeyEvent.KEYCODE_BACK && isExpanded) {
+            isExpanded = false
+            return true
         }
         return super.onKeyDown(keyCode, event)
     }
