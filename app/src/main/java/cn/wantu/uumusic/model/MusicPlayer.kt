@@ -21,6 +21,7 @@ import cn.wantu.uumusic.UUApp
 class MusicPlayer {
 
     companion object {
+        val downloadDir = UUApp.getInstance().filesDir
         var isPlaying by mutableStateOf(false)
         var isPrepared by mutableStateOf(true)
         var progress by mutableFloatStateOf(0f)
@@ -94,7 +95,7 @@ class MusicPlayer {
         }
         fun getInstance() = player
 
-        suspend fun createMediaItem(id: Long): MediaItem {
+        private suspend fun createMediaItem(id: Long): MediaItem {
             val mediaInfo = getMusicMediaInfo(id)
             val bundle = Bundle()
             bundle.putString("cover", mediaInfo.cover)

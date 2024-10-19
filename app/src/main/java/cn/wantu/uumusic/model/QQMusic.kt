@@ -48,7 +48,7 @@ suspend fun getQQInfo(qq: String): QQInfo = withContext(Dispatchers.IO) {
     val data = baseRequest("/info?uin=$qq").getJSONObject("data")
     QQInfo(json.decodeFromString<UserInfo>(data.getString("info")),
         json.decodeFromString<DiskInfo>(data.getString("likesong")),
-        json.decodeFromString<List<DiskInfo>>(data.getString("mydiss")),
+        json.decodeFromString<List<DiskInfo>>(data.optString("mydiss", "[]")),
         json.decodeFromString<List<DiskInfo>>(data.optString("likediss", "[]"))
     )
 }

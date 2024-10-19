@@ -5,6 +5,7 @@ import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -17,30 +18,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -60,6 +71,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -68,24 +80,34 @@ import java.io.FileOutputStream
 class MainActivity : ComponentActivity() {
 
     private val json = Json { ignoreUnknownKeys = true }
-    private val sharedPreferences =
+    private val userInfoEditor =
         UUApp.getInstance().getSharedPreferences("UserInfo", MODE_PRIVATE)
     private val file = File(UUApp.getInstance().filesDir, "diskList.json")
 
-    private var isExpanded by mutableStateOf(false)
-    private var qq by mutableStateOf(sharedPreferences.getString("qq", ""))
-    private var username by mutableStateOf(sharedPreferences.getString("username", "暂未登录"))
-    private var avatar by mutableStateOf(sharedPreferences.getString("avatar", ""))
+    private var dropDownMenuExpanded by mutableStateOf(false)
+    private var showEditQQDialog by mutableStateOf(false)
+
+    private var qq by mutableStateOf(userInfoEditor.getString("qq", ""))
+    private var username by mutableStateOf(
+        userInfoEditor.getString(
+            "username",
+            UUApp.getInstance().getString(R.string.not_login)
+        )
+    )
+    private var avatar by mutableStateOf(userInfoEditor.getString("avatar", ""))
     private var isLogin by mutableStateOf(qq != "")
-    private var showDialog by mutableStateOf(!isLogin)
     private var diskList by mutableStateOf(
         if (file.exists()) json.decodeFromString(file.readText())
-        else listOf(DiskInfo(id = 0, title = "暂无", picurl = ""))
+        else emptyList<DiskInfo>()
     )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (isLogin) {
-            login(qq!!)
+
+        if (isLogin) { // 有账号的信息
+            lifecycleScope.launch {
+                login(qq!!) // 更新信息
+            }
         }
         enableEdgeToEdge()
         setContent {
@@ -99,28 +121,30 @@ class MainActivity : ComponentActivity() {
 //        }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainLayout() {
-        Scaffold(
+        val scope = rememberCoroutineScope()
+        val scaffoldState = rememberBottomSheetScaffoldState()
+
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
             topBar = topBar(),
-            bottomBar = {
-                NewMusicControllerBar(isExpanded, onExpand = { isExpanded = !isExpanded })
+            sheetContent = {
+                NewMusicControllerBar()
             },
+            sheetPeekHeight = 128.dp
         ) { paddingValues ->
-            EditQQDialog(showDialog = showDialog,
-                initialText = qq!!,
-                onConfirm = {
-                    showDialog = false
-                    qq = it
-                    if (qq != "") {
-                        isLogin = true
-                        sharedPreferences.edit().putString("qq", it).apply()
+            EditQQDialog {
+                showEditQQDialog = false
+                qq = it
+                if (qq != "") {
+                    isLogin = true
+                    userInfoEditor.edit().putString("qq", it).apply()
+                    scope.launch {
                         login(qq!!)
-                    } else {
-                        logout()
                     }
-                }) {
-                showDialog = false
+                }
             }
             LazyColumn(
                 contentPadding = paddingValues,
@@ -130,7 +154,7 @@ class MainActivity : ComponentActivity() {
                 item { BannerSection() }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
-                    SectionTitle(title = "我的歌单")
+                    SectionTitle(title = stringResource(if (diskList.isNotEmpty()) R.string.my_song_list else R.string.empty_song_list))
                     Spacer(modifier = Modifier.height(4.dp))
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -150,82 +174,136 @@ class MainActivity : ComponentActivity() {
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     SectionTitle(title = "热门歌手")
+                    Spacer(modifier = Modifier.height(4.dp))
                     ArtistSection()
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     SectionTitle(title = "新歌速递")
+                    Spacer(modifier = Modifier.height(4.dp))
                     NewSongsSection()
                 }
             }
         }
     }
 
-    private fun login(qq: String) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val qqInfo =
-                    getQQInfo(qq = qq)
-                username = qqInfo.userInfo.name
-                avatar = qqInfo.userInfo.pic
-                diskList =
-                    listOf(qqInfo.likesong) + qqInfo.mydiss + qqInfo.likediss
-                FileOutputStream(file).use { output ->
-                    output.write(
-                        json.encodeToString(
-                            diskList
-                        ).toByteArray()
-                    )
-                }
-                sharedPreferences.edit()
-                    .putString("username", username)
-                    .putString("avatar", avatar)
-                    .apply()
-            } catch (e: Exception) {
-                isLogin = (avatar != "")
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun logout() {
-        qq = ""
-        username = "暂未登录"
-        avatar = ""
-        isLogin = false
-        sharedPreferences.edit().clear().apply()
-        diskList = listOf(DiskInfo(id = 0, title = "暂无", picurl = ""))
-        file.delete()
-    }
-
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && isExpanded) {
-            isExpanded = false
-            return true
-        }
         return super.onKeyDown(keyCode, event)
     }
 
     @Composable
-    fun EditQQDialog(
-        showDialog: Boolean,
-        initialText: String,
-        onConfirm: (String) -> Unit,
-        onNegative: () -> Unit
-    ) {
-        if (showDialog) {
-            var text by remember { mutableStateOf(initialText) }
+    @OptIn(ExperimentalMaterial3Api::class)
+    private fun topBar() = @Composable {
+        TopAppBar(
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(if (isLogin) avatar else R.drawable.xxz_rabbit)
+                            .memoryCachePolicy(CachePolicy.DISABLED)
+                            .diskCachePolicy(CachePolicy.DISABLED)
+                            .build(),
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(horizontal = 8.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                dropDownMenuExpanded = true
+                            }
+                    )
+                    Text(text = username!!, modifier = Modifier, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { SearchMusicActivity.gotoSearchMusicActivity(this@MainActivity) }, modifier = Modifier.padding(end = 8.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon"
+                        )
+                    }
+                }
+                DropdownMenu(
+                    expanded = dropDownMenuExpanded,
+                    onDismissRequest = { dropDownMenuExpanded = false },
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .background(Color.White)
+                ) {
+                    if (isLogin) {
+                        DropdownMenuItem(onClick = {
+                            logout()
+                            dropDownMenuExpanded = false
+                        }, text = {
+                            Row {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ExitToApp,
+                                    contentDescription = stringResource(R.string.logout),
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(text = stringResource(R.string.logout))
+                            }
+                        })
+                    } else {
+                        DropdownMenuItem(onClick = {
+                            showEditQQDialog = true
+                            dropDownMenuExpanded = false
+                        }, text = {
+                            Row {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = stringResource(R.string.login),
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(text = stringResource(R.string.login))
+                            }
+                        })
+                    }
+                    DropdownMenuItem(onClick = {
+                        dropDownMenuExpanded = false
+                    }, text = {
+                        Row {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings),
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(text = stringResource(R.string.settings))
+                            /*
+                                "设置" -> Icon(
+                                    Icons.Default.Settings,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+
+                                "登出" -> Icon(
+                                    Icons.AutoMirrored.Filled.ExitToApp,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )*/
+
+                        }
+                    })
+                }
+            },
+        )
+    }
+
+    @Composable
+    fun EditQQDialog(onConfirm: (String) -> Unit) {
+        if (showEditQQDialog) {
+            var text by remember { mutableStateOf("") }
             AlertDialog(
                 onDismissRequest = {},
-                title = { Text(text = getString(R.string.edit_qq_title), fontSize = 18.sp) },
+                title = { Text(text = stringResource(R.string.edit_qq_title), fontSize = 18.sp) },
                 text = {
                     Column {
-                        Text(text = getString(R.string.edit_qq_content))
+                        Text(text = stringResource(R.string.edit_qq_content))
                         Spacer(modifier = Modifier.height(8.dp))
                         TextField(
                             value = text,
                             onValueChange = { newText -> text = newText.filter { it.isDigit() } },
-                            label = { Text(text = getString(R.string.edit_qq_hint)) },
+                            label = { Text(text = stringResource(R.string.edit_qq_hint)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
@@ -242,50 +320,50 @@ class MainActivity : ComponentActivity() {
                 },
                 confirmButton = {
                     TextButton(onClick = { onConfirm(text) }) {
-                        Text(getString(R.string.edit_qq_confirm))
+                        Text(stringResource(R.string.edit_qq_confirm))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { onNegative() }) {
-                        Text(getString(R.string.edit_qq_dismiss))
+                    TextButton(onClick = { showEditQQDialog = false }) {
+                        Text(stringResource(R.string.edit_qq_dismiss))
                     }
                 }
             )
         }
     }
 
-    @Composable
-    @OptIn(ExperimentalMaterial3Api::class)
-    private fun topBar() = @Composable {
-        TopAppBar(
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(if (isLogin) avatar else R.mipmap.ic_launcher)
-                            .memoryCachePolicy(CachePolicy.DISABLED)
-                            .diskCachePolicy(CachePolicy.DISABLED)
-                            .build(),
-                        contentDescription = "Avatar",
-                        modifier = Modifier
-                            .size(48.dp)
-                            .padding(horizontal = 8.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null) {
-
-                                showDialog = true
-                            }
-                    )
-                    Text(text = username!!)
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = { isExpanded = true }, modifier = Modifier.padding(end = 8.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon"
-                        )
-                    }
-                }
-            },)
+    private suspend fun login(qq: String) = withContext(Dispatchers.IO) {
+        try {
+            val qqInfo =
+                getQQInfo(qq = qq)
+            username = qqInfo.userInfo.name
+            avatar = qqInfo.userInfo.pic
+            diskList = listOf(qqInfo.likesong) + qqInfo.mydiss + qqInfo.likediss
+            FileOutputStream(file).use { output ->
+                output.write(
+                    json.encodeToString(
+                        diskList
+                    ).toByteArray()
+                )
+            }
+            userInfoEditor.edit()
+                .putString("username", username)
+                .putString("avatar", avatar)
+                .apply()
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
     }
+
+    private fun logout() {
+        qq = ""
+        username = getString(R.string.not_login)
+        avatar = ""
+        isLogin = false
+        userInfoEditor.edit().clear().apply()
+        diskList = emptyList()
+        file.delete()
+    }
+
+
 }

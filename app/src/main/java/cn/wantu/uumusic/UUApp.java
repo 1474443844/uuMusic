@@ -27,9 +27,6 @@ public class UUApp extends Application {
     public static Context getContext(){
         return instance.getApplicationContext();
     }
-    public static String getStr(int resid){
-        return instance.getString(resid);
-    }
     public static OkHttpClient getClient(){
         return client;
     }

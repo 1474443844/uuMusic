@@ -21,13 +21,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,8 @@ class DiskDisplayActivity : ComponentActivity() {
     private var songSize = -1
     private var page = 1
     private var id = 0L
-    var isExpanded by mutableStateOf(false)
+    private var isExpanded by mutableStateOf(false)
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,13 +74,14 @@ class DiskDisplayActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val scope = rememberCoroutineScope()
+            val scaffoldState = rememberBottomSheetScaffoldState()
             val listState = rememberLazyListState()
             var isLoading by remember { mutableStateOf(false) }
             LaunchedEffect(listState) {
                 snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
                     .collect { visibleItemCount ->
                         val totalItemCount = listState.layoutInfo.totalItemsCount
-                        if(totalItemCount < songSize){
+                        if (totalItemCount < songSize) {
                             if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
                                 isLoading = true
                                 val diskDetail = getDiskDetail(id, page)
@@ -91,18 +94,23 @@ class DiskDisplayActivity : ComponentActivity() {
             }
 
             UUMusicTheme {
-                Scaffold(
+                BottomSheetScaffold(
+                    scaffoldState = scaffoldState,
                     topBar = {
                         TopAppBar(title = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { finish() }) {
-                                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                                    }
-                                    Text(diskName!!, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { finish() }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
                                 }
+                                Text(diskName!!, fontSize = 20.sp, fontWeight = FontWeight.Bold, )
+                            }
                         })
                     },
-                    bottomBar = { NewMusicControllerBar(isExpanded, onExpand = { isExpanded = !isExpanded }) }
+                    sheetContent = { NewMusicControllerBar() },
+                    sheetPeekHeight = 128.dp
                 ) { paddingValues ->
 
                     LazyColumn(
@@ -129,15 +137,18 @@ class DiskDisplayActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        if(songList.isNotEmpty()) {
+                        if (songList.isNotEmpty()) {
                             items(songList) { song ->
                                 SongItem(
                                     song,
-                                    modifier = Modifier.fillMaxWidth().padding(10.dp).clickable {
-                                        scope.launch {
-                                            MusicPlayer.playAtNow(song.id)
-                                        }
-                                    }){
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp)
+                                        .clickable {
+                                            scope.launch {
+                                                MusicPlayer.playAtNow(song.id)
+                                            }
+                                        }) {
                                     scope.launch {
                                         MusicPlayer.playAtNext(song.id)
                                     }
@@ -145,7 +156,7 @@ class DiskDisplayActivity : ComponentActivity() {
                                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                             }
                         } else {
-                            if (showErrorInfo){
+                            if (showErrorInfo) {
                                 item {
                                     Text(text = errorInfo, modifier = Modifier.padding(16.dp))
                                 }
@@ -165,10 +176,10 @@ class DiskDisplayActivity : ComponentActivity() {
 //                diskCover = diskDetail.picurl
                 songList.addAll(diskDetail.songs)
                 page++
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 println(e.message)
                 val error = JSONObject(e.message!!)
-                if(error.getInt("code") == 600){
+                if (error.getInt("code") == 600) {
                     showErrorInfo = true
                     errorInfo = error.getString("message")
                 }
@@ -184,8 +195,9 @@ class DiskDisplayActivity : ComponentActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
-    companion object{
-        fun showDiskDetails(context: Context, id:Long, name:String, cover: String){
+
+    companion object {
+        fun showDiskDetails(context: Context, id: Long, name: String, cover: String) {
             val intent = Intent(context, DiskDisplayActivity::class.java)
             intent.putExtra("id", id)
             intent.putExtra("name", name)

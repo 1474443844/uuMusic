@@ -6,5 +6,10 @@
     <string name="edit_qq_hint">QQ</string>
     <string name="edit_qq_confirm">确定</string>
     <string name="edit_qq_dismiss">取消</string>
-    <string name="not_login">还未登录</string>
+    <string name="not_login">暂未登录</string>
+    <string name="login">登录</string>
+    <string name="logout">登出</string>
+    <string name="settings">设置</string>
+    <string name="my_song_list">我的歌单</string>
+    <string name="empty_song_list">暂无歌单</string>
 </resources>
