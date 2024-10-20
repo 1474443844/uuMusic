@@ -1,7 +1,6 @@
 package cn.wantu.uumusic
 
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -30,7 +29,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,10 +59,10 @@ import cn.wantu.uumusic.model.getQQInfo
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import cn.wantu.uumusic.ui.widget.ArtistSection
 import cn.wantu.uumusic.ui.widget.BannerSection
-import cn.wantu.uumusic.ui.widget.NewMusicControllerBar
 import cn.wantu.uumusic.ui.widget.NewSongsSection
 import cn.wantu.uumusic.ui.widget.PlaylistItem
 import cn.wantu.uumusic.ui.widget.SectionTitle
+import cn.wantu.uumusic.ui.widget.WithMusicBar
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -115,26 +112,12 @@ class MainActivity : ComponentActivity() {
                 MainLayout()
             }
         }
-//        lifecycleScope.launch {
-//            // 在这里编写协程代码
-//            searchMusicByName("杀青")
-//        }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainLayout() {
         val scope = rememberCoroutineScope()
-        val scaffoldState = rememberBottomSheetScaffoldState()
-
-        BottomSheetScaffold(
-            scaffoldState = scaffoldState,
-            topBar = topBar(),
-            sheetContent = {
-                NewMusicControllerBar()
-            },
-            sheetPeekHeight = 128.dp
-        ) { paddingValues ->
+        WithMusicBar(topBar = topBar()) { _ ->
             EditQQDialog {
                 showEditQQDialog = false
                 qq = it
@@ -147,7 +130,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             LazyColumn(
-                contentPadding = paddingValues,
+//                contentPadding = paddingValues,
                 modifier = Modifier.fillMaxSize()
             ) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -185,10 +168,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return super.onKeyDown(keyCode, event)
     }
 
     @Composable

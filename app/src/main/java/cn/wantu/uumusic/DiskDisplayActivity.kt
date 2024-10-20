@@ -21,14 +21,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,11 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import cn.wantu.uumusic.data.SongInfo
-import cn.wantu.uumusic.model.MusicPlayer
 import cn.wantu.uumusic.model.getDiskDetail
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
-import cn.wantu.uumusic.ui.widget.NewMusicControllerBar
 import cn.wantu.uumusic.ui.widget.SongItem
+import cn.wantu.uumusic.ui.widget.WithMusicBar
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -73,30 +70,28 @@ class DiskDisplayActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            val scope = rememberCoroutineScope()
-            val scaffoldState = rememberBottomSheetScaffoldState()
-            val listState = rememberLazyListState()
-            var isLoading by remember { mutableStateOf(false) }
-            LaunchedEffect(listState) {
-                snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
-                    .collect { visibleItemCount ->
-                        val totalItemCount = listState.layoutInfo.totalItemsCount
-                        if (totalItemCount < songSize) {
-                            if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
-                                isLoading = true
-                                val diskDetail = getDiskDetail(id, page)
-                                songList.addAll(diskDetail.songs)
-                                page++
-                                isLoading = false
+            UUMusicTheme {
+                val scope = rememberCoroutineScope()
+                val listState = rememberLazyListState()
+                var isLoading by remember { mutableStateOf(false) }
+
+                LaunchedEffect(listState) {
+                    snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
+                        .collect { visibleItemCount ->
+                            val totalItemCount = listState.layoutInfo.totalItemsCount
+                            if (totalItemCount < songSize) {
+                                if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
+                                    isLoading = true
+                                    val diskDetail = getDiskDetail(id, page)
+                                    songList.addAll(diskDetail.songs)
+                                    page++
+                                    isLoading = false
+                                }
                             }
                         }
-                    }
-            }
+                }
 
-            UUMusicTheme {
-                BottomSheetScaffold(
-                    scaffoldState = scaffoldState,
-                    topBar = {
+                WithMusicBar(topBar = {
                         TopAppBar(title = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { finish() }) {
@@ -108,14 +103,12 @@ class DiskDisplayActivity : ComponentActivity() {
                                 Text(diskName!!, fontSize = 20.sp, fontWeight = FontWeight.Bold, )
                             }
                         })
-                    },
-                    sheetContent = { NewMusicControllerBar() },
-                    sheetPeekHeight = 128.dp
-                ) { paddingValues ->
+                    }
+                ) {  player ->
 
                     LazyColumn(
                         state = listState,
-                        contentPadding = paddingValues,
+//                        contentPadding = paddingValues,
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
@@ -146,11 +139,11 @@ class DiskDisplayActivity : ComponentActivity() {
                                         .padding(10.dp)
                                         .clickable {
                                             scope.launch {
-                                                MusicPlayer.playAtNow(song.id)
+                                                player.playAtNow(song.id)
                                             }
                                         }) {
                                     scope.launch {
-                                        MusicPlayer.playAtNext(song.id)
+                                        player.playAtNext(song.id)
                                     }
                                 }
                                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
