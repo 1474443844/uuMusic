@@ -52,9 +52,9 @@ class SearchMusicActivity : ComponentActivity() {
 
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
                             .systemBarsPadding()
                             .padding(start = 16.dp, end = 16.dp)
+                            .fillMaxSize()
                     ) {
                         // 搜索栏
                         OutlinedTextField(
