@@ -15,6 +15,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import kotlin.math.ceil
 
 private const val baseUrl = "https://api.vkeys.cn/v2/music/tencent"
 private val json = Json { ignoreUnknownKeys = true }
@@ -28,6 +29,40 @@ private const val System_Error = 503
 private const val Vps_Error = 504
 private const val Tips_Message = 600
 private const val Tips_Error = 601
+
+suspend fun getRecommendSong(callBack: (String, String, Long) -> Unit) = withContext(Dispatchers.IO) {
+    val request = Request.Builder()
+        .url("http://www.wty5.cn/uuMusic.json")
+        .get()
+        .build()
+    UUApp.getClient().newCall(request).execute().use { response ->
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        val responseData = response.body?.string()
+        // 解析 JSON 数据
+        val result = JSONObject(responseData!!)
+        val recommendSongId = result.getLong("songId")
+        val mediaInfo = getMusicMediaInfo(recommendSongId)
+        callBack(mediaInfo.song, mediaInfo.cover, recommendSongId)
+    }
+}
+suspend fun getRecommendSongs(callBack: (String, String) -> Unit) = withContext(Dispatchers.IO) {
+    val request = Request.Builder()
+        .url("http://www.wty5.cn/uuMusic.json")
+        .get()
+        .build()
+    UUApp.getClient().newCall(request).execute().use { response ->
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        val responseData = response.body?.string()
+        // 解析 JSON 数据
+        val result = JSONObject(responseData!!)
+        val recommendSongsId = result.getLong("songsId")
+        val recommendSongIndex = result.getInt("index")
+        val diskDetail =
+            getDiskDetail(recommendSongsId, ceil(recommendSongIndex / 10f).toInt())
+        val songInfo = diskDetail.songs[recommendSongIndex - 1]
+        callBack(songInfo.song, songInfo.cover)
+    }
+}
 
 suspend fun baseRequest(route: String): JSONObject = withContext(Dispatchers.IO) {
     val request = Request.Builder()

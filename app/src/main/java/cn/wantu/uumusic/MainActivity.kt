@@ -39,6 +39,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,10 +54,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import cn.wantu.uumusic.data.DiskInfo
+import cn.wantu.uumusic.model.MusicPlayerController
 import cn.wantu.uumusic.model.getQQInfo
+import cn.wantu.uumusic.model.getRecommendSong
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import cn.wantu.uumusic.ui.widget.ArtistSection
-import cn.wantu.uumusic.ui.widget.BannerSection
+import cn.wantu.uumusic.ui.widget.NewBannerSection
 import cn.wantu.uumusic.ui.widget.NewSongsSection
 import cn.wantu.uumusic.ui.widget.PlaylistItem
 import cn.wantu.uumusic.ui.widget.SectionTitle
@@ -73,6 +76,12 @@ import java.io.File
 import java.io.FileOutputStream
 
 class MainActivity : ComponentActivity() {
+
+    // Test 试行区
+    private var recommendCover by mutableStateOf("")
+    private var recommendTitle by mutableStateOf("")
+    private var recommendId by mutableLongStateOf(0L)
+    // Test
 
     private val json = Json { ignoreUnknownKeys = true }
     private val userInfoEditor =
@@ -99,6 +108,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        lifecycleScope.launch {
+            getRecommendSong { title, cover, id ->
+                recommendTitle = title
+                recommendCover = cover
+                recommendId = id
+            }
+        }
         if (isLogin) { // 有账号的信息
             lifecycleScope.launch {
                 login(qq!!) // 更新信息
@@ -110,6 +126,7 @@ class MainActivity : ComponentActivity() {
                 MainLayout()
             }
         }
+
     }
 
     @Composable
@@ -132,7 +149,13 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
-                item { BannerSection() }
+                item { NewBannerSection(recommendCover, recommendTitle, modifier = Modifier.clickable {
+                    if(recommendId != 0L){
+                        scope.launch {
+                            MusicPlayerController.getInstance().playAtNow(recommendId)
+                        }
+                    }
+                }) }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     SectionTitle(title = stringResource(if (diskList.isNotEmpty()) R.string.my_song_list else R.string.empty_song_list))

@@ -36,10 +36,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
-      - name: List build outputs
-        run: |
-          find . -type f -name "*.apk"
-
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
@@ -59,11 +55,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-release
-          path: app/build/outputs/apk/release/
+          path: app/release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v4
         with:
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/release/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

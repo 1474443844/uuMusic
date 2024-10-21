@@ -186,10 +186,10 @@ class MusicPlayerController private constructor() {
         val mediaItemIndex = findMediaItemIndex(id)
         if (mediaItemIndex == -1) {
             val mediaItem = createMediaItem(id)
-            player.addMediaItem(player.currentMediaItemIndex + 1, mediaItem)
+            player.addMediaItem(currentMediaItemIndex + 1, mediaItem)
             player.seekToNext()
             player.play()
-            playList.add(player.currentMediaItemIndex, mediaItem)
+            playList.add(currentMediaItemIndex, mediaItem)
         } else {
             player.seekTo(mediaItemIndex, 0)
             player.play()
@@ -197,17 +197,22 @@ class MusicPlayerController private constructor() {
     }
 
     suspend fun playAtNext(id: Long) {
-        if (player.mediaItemCount == 0) {
+        if (mediaItemCount == 0) {
             playAtNow(id)
             return
         }
         val mediaItemIndex = findMediaItemIndex(id)
+
         if (mediaItemIndex == -1) {
             val mediaItem = createMediaItem(id)
-            player.addMediaItem(player.currentMediaItemIndex + 1, mediaItem)
-            playList.add(player.currentMediaItemIndex, mediaItem)
+            player.addMediaItem(currentMediaItemIndex + 1, mediaItem)
+            playList.add(currentMediaItemIndex+1, mediaItem)
         } else {
-            player.moveMediaItem(mediaItemIndex, player.currentMediaItemIndex + 1)
+            println("mediaItemIndex = $mediaItemIndex, currentMediaItemIndex = $currentMediaItemIndex")
+            val mediaItem = playList[mediaItemIndex]
+            player.moveMediaItem(mediaItemIndex, currentMediaItemIndex + 1)
+            playList.remove(mediaItem)
+            playList.add(currentMediaItemIndex + 1, mediaItem)
         }
     }
 
@@ -221,6 +226,13 @@ class MusicPlayerController private constructor() {
         return -1
     }
 
+    fun remove(index: Int) {
+        playList.removeAt(index)
+        player.removeMediaItem(index)
+    }
+    fun remove(){
+        remove(player.currentMediaItemIndex)
+    }
 //    private fun updatePlayList() {
 //        val mediaItemCount = player.mediaItemCount
 //        for (i in 0 until mediaItemCount) {
@@ -231,6 +243,9 @@ class MusicPlayerController private constructor() {
 //    }
 
     fun playIndex(index: Int) {
+        if(index == currentMediaItemIndex){
+            return
+        }
         if (index in 0 until player.mediaItemCount) {
             player.seekTo(index, 0)
             player.play()

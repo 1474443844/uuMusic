@@ -1,6 +1,7 @@
 package cn.wantu.uumusic.ui.widget
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Card
@@ -26,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -140,9 +143,22 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
                 }
             }
             LazyColumn(modifier = Modifier.fillMaxHeight(0.4f)) {
-                items(player.playList) {
+                items(player.playList.size) { index ->
                     HorizontalDivider()
-                    Text(text = it.mediaMetadata.title.toString(), modifier = Modifier.padding(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable {
+                        scope.launch {
+                            player.playIndex(index)
+                        }
+                    }) {
+                        Text(text = "${player.playList[index].mediaMetadata.title}—${player.playList[index].mediaMetadata.artist}",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.padding(8.dp).weight(1.0f))
+                        IconButton(onClick = {
+                            player.remove(index)
+                        }){
+                            Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                        }
+                    }
                 }
             }
         },
@@ -265,7 +281,27 @@ fun NewMusicControllerBar() {
 
 }
 */
-
+@Composable
+fun NewBannerSection(cover: String, title: String, modifier: Modifier = Modifier) {
+    // 这里可以放置轮播图或横幅广告
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(8.dp)),
+//        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = rememberAsyncImagePainter(model = cover),
+            // painter = painterResource(id = R.drawable.banner_placeholder),
+            contentDescription = "Banner",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Text(text = title, modifier = Modifier.background(Color.Black.copy(alpha = 0.6f)).padding(6.dp).align(Alignment.BottomEnd), color = Color.White)
+    }
+}
 // 横幅
 @Composable
 fun BannerSection() {
