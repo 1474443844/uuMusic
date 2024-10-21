@@ -245,19 +245,6 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(text = stringResource(R.string.settings))
-                            /*
-                                "设置" -> Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-
-                                "登出" -> Icon(
-                                    Icons.AutoMirrored.Filled.ExitToApp,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )*/
-
                         }
                     })
                 }

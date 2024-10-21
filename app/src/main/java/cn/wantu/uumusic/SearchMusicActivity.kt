@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -23,11 +24,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -40,15 +44,35 @@ import cn.wantu.uumusic.ui.widget.WithMusicBar
 import kotlinx.coroutines.launch
 
 class SearchMusicActivity : ComponentActivity() {
+    private var page = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             UUMusicTheme {
+                val listState = rememberLazyListState()
+                val scope = rememberCoroutineScope()
+                var isLoading by remember { mutableStateOf(false) }
+                var query by remember { mutableStateOf("") }
+                val searchResults = remember { mutableStateListOf<SongInfo>() }
+
+                LaunchedEffect(listState) {
+                    snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
+                        .collect { visibleItemCount ->
+                            val totalItemCount = listState.layoutInfo.totalItemsCount
+                            if(query != "") {
+                                if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
+                                    isLoading = true
+                                    val songs = searchMusicByName(query, page)
+                                    searchResults.addAll(songs)
+                                    page++
+                                    isLoading = false
+                                    println("page: $page")
+                                }
+                            }
+                        }
+                }
                 WithMusicBar { player ->
-                    var query by remember { mutableStateOf("") }
-                    var searchResults by remember { mutableStateOf<List<SongInfo>>(emptyList()) }
-                    val scope = rememberCoroutineScope()
 
                     Column(
                         modifier = Modifier
@@ -64,13 +88,19 @@ class SearchMusicActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxWidth(),
                             singleLine = true,
-                            trailingIcon = { Icon(Icons.Filled.Search, contentDescription = "搜索图标") },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Filled.Search,
+                                    contentDescription = "搜索图标"
+                                )
+                            },
                             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
                             keyboardActions = KeyboardActions(
                                 onSearch = {
                                     // 执行搜索操作
                                     scope.launch {
-                                        searchResults = searchMusicByName(query)
+                                        searchResults.addAll(searchMusicByName(query))
+                                        page = 2
                                     }
                                 }
                             )
@@ -80,9 +110,9 @@ class SearchMusicActivity : ComponentActivity() {
 
                         // 搜索结果列表
                         if (searchResults.isNotEmpty()) {
-                            LazyColumn {
+                            LazyColumn(state = listState) {
                                 items(searchResults) { song ->
-                                    MusicItemView(songInfo = song){
+                                    MusicItemView(songInfo = song) {
                                         scope.launch {
                                             player.playAtNow(song.id)
                                         }
@@ -103,9 +133,10 @@ class SearchMusicActivity : ComponentActivity() {
             }
         }
     }
-    companion object{
-        fun gotoSearchMusicActivity(context: Context){
-            context.startActivity(Intent(context,SearchMusicActivity::class.java))
+
+    companion object {
+        fun gotoSearchMusicActivity(context: Context) {
+            context.startActivity(Intent(context, SearchMusicActivity::class.java))
         }
     }
 }

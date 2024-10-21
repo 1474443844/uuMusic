@@ -57,8 +57,8 @@ suspend fun getQQInfo(qq: String): QQInfo = withContext(Dispatchers.IO) {
     )
 }
 
-suspend fun searchMusicByName(name: String): List<SongInfo> = withContext(Dispatchers.IO) {
-    val result = baseRequest("/search/song?word=$name")
+suspend fun searchMusicByName(name: String, page: Int = 1): List<SongInfo> = withContext(Dispatchers.IO) {
+    val result = baseRequest("/search/song?word=$name&page=$page")
     json.decodeFromString<List<SongInfo>>(result.getString("data"))
 }
 

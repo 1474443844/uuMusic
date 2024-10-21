@@ -108,7 +108,6 @@ class DiskDisplayActivity : ComponentActivity() {
 
                     LazyColumn(
                         state = listState,
-//                        contentPadding = paddingValues,
                         modifier = Modifier
                             .fillMaxSize()
                     ) {

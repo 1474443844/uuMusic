@@ -154,9 +154,32 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
     }
 }
 
+/*
+ * 分页加载列表
+@Composable
+fun PagingLazyColumn(count: Int, loadData: () -> Unit) {
+    val listState = rememberLazyListState()
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
+            .collect { visibleItemCount ->
+                val totalItemCount = listState.layoutInfo.totalItemsCount
+                if (totalItemCount < count) {
+                    if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
+                        isLoading = true
+                        loadData()
+                        isLoading = false
+                    }
+                }
+            }
+    }
+}
+*/
+
 
 /*
-// 音乐控制栏
+ * 音乐控制栏
 @Composable
 fun NewMusicControllerBar() {
     val player = MusicPlayerController.getInstance()
