@@ -167,3 +167,8 @@ suspend fun checkDownloadUrl(url: String): Boolean = withContext(Dispatchers.IO)
         }
     }
 }
+
+suspend fun getMusicLrc(id: Long) : String = withContext(Dispatchers.IO){
+    val data = baseRequest("/lyric?id=$id").getJSONObject("data")
+    data.getString("lrc")
+}

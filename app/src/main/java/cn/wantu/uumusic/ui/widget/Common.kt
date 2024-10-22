@@ -49,12 +49,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.wantu.uumusic.R
+import cn.wantu.uumusic.SongDisplayActivity
 import cn.wantu.uumusic.data.DiskInfo
 import cn.wantu.uumusic.data.SongInfo
 import cn.wantu.uumusic.model.MusicPlayerController
@@ -81,8 +83,11 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
             topBar = topBar,
             sheetContent = {
                 Row (Modifier.height(128.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-
+                    val context = LocalContext.current
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+                        player.currentMediaItem?.mediaId?.toLong()
+                            ?.let { SongDisplayActivity.showSongDetails(context, it) }
+                    }) {
                         println("player.playList.size = ${player.playList.size}, player.isPrepared = ${player.isPrepared}")
                         if (player.playList.size > 0 || !player.isPrepared) {
                             val mediaItem = player.currentMediaItem

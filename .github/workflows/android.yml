@@ -42,24 +42,24 @@ jobs:
           name: app-release
           path: app/release/app-release.apk
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download Release APK
-        uses: actions/download-artifact@v4
-        with:
-          name: app-release
-          path: app/release/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v4
-        with:
-          files: app/release/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#  release:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push'
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Download Release APK
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: app-release
+#          path: app/release/
+#
+#      - name: Create GitHub Release
+#        uses: softprops/action-gh-release@v4
+#        with:
+#          files: app/release/app-release.apk
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
