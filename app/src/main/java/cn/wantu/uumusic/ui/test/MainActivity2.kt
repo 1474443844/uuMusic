@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import cn.wantu.uumusic.ui.test.ui.theme.UUMusicTheme
-import cn.wantu.uumusic.ui.widget.DropdownMenuExample
 
 class MainActivity2 : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,7 +14,6 @@ class MainActivity2 : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             UUMusicTheme {
-                DropdownMenuExample()
             }
         }
     }

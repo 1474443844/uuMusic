@@ -9,15 +9,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -64,108 +70,122 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
     val player = MusicPlayerController.getInstance()
-    BottomSheetScaffold(
-        modifier = modifier,
-        scaffoldState = scaffoldState,
-        topBar = topBar,
-        sheetContent = {
-            Box(Modifier.height(128.dp)) {
-                BottomAppBar {
-                    println("player.playList.size = ${player.playList.size}, player.isPrepared = ${player.isPrepared}")
-                    if (player.playList.size > 0 || !player.isPrepared) {
-                        val mediaItem = player.currentMediaItem
-                        val mediaMetadata = mediaItem?.mediaMetadata
-                        val extras = mediaMetadata?.extras
-                        AsyncImage(
-                            model = extras?.getString("cover"),
-                            contentDescription = "Album",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(48.dp)
-                                .clickable {
-                                    player.showPlayList()
-                                }
-                        )
-                        Text(
-                            text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 8.dp)
-                        )
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(end = 8.dp)) {
-                            LaunchedEffect(player.isPlaying) {
-                                scope.launch {
-                                    while (player.isPlaying) {
-                                        player.progress =
-                                            player.currentPosition.toFloat() / player.duration
-                                        delay(200)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(WindowInsets.systemBars.only(WindowInsetsSides.Bottom).asPaddingValues()) // 动态适配状态栏和导航栏
+    ) {
+        BottomSheetScaffold(
+            modifier = modifier,
+            scaffoldState = scaffoldState,
+            topBar = topBar,
+            sheetContent = {
+                Row (Modifier.height(128.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                        println("player.playList.size = ${player.playList.size}, player.isPrepared = ${player.isPrepared}")
+                        if (player.playList.size > 0 || !player.isPrepared) {
+                            val mediaItem = player.currentMediaItem
+                            val mediaMetadata = mediaItem?.mediaMetadata
+                            val extras = mediaMetadata?.extras
+                            AsyncImage(
+                                model = extras?.getString("cover"),
+                                contentDescription = "Album",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(48.dp)
+                                    .clickable {
+                                        player.showPlayList()
+                                    }
+                            )
+                            Text(
+                                text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
+                            )
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                LaunchedEffect(player.isPlaying) {
+                                    scope.launch {
+                                        while (player.isPlaying) {
+                                            player.progress =
+                                                player.currentPosition.toFloat() / player.duration
+                                            delay(200)
+                                        }
                                     }
                                 }
-                            }
-                            if (player.isPrepared) {
-                                CircularProgressIndicator(
-                                    progress = { player.progress },
-                                    trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
-                                )
-                            } else {
-                                CircularProgressIndicator()
-                            }
-                            IconButton(onClick = {
-                                if (player.isPlaying) {
-                                    player.pause()
+                                if (player.isPrepared) {
+                                    CircularProgressIndicator(
+                                        progress = { player.progress },
+                                        trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
+                                    )
                                 } else {
-                                    player.play()
+                                    CircularProgressIndicator()
+                                }
+                                IconButton(onClick = {
+                                    if (player.isPlaying) {
+                                        player.pause()
+                                    } else {
+                                        player.play()
+                                    }
+                                }) {
+                                    Image(
+                                        painter = painterResource(if (player.isPlaying) R.drawable.baseline_pause_24 else R.drawable.baseline_play_arrow_24),
+                                        contentDescription = if (player.isPlaying) "暂停" else "播放",
+                                        colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
+                                    )
+                                }
+                            }
+                        } else {
+                            Image(
+                                painter = painterResource(R.drawable.baseline_music_disc_24),
+                                contentDescription = "Album",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(36.dp),
+                                colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
+                            )
+                            Text(
+                                text = "UU音乐 听你想听"
+                            )
+                        }
+                    }
+                }
+                LazyColumn(modifier = Modifier.fillMaxHeight(0.4f)) {
+                    items(player.playList.size) { index ->
+                        HorizontalDivider()
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                scope.launch {
+                                    player.playIndex(index)
                                 }
                             }) {
-                                Image(
-                                    painter = painterResource(if (player.isPlaying) R.drawable.baseline_pause_24 else R.drawable.baseline_play_arrow_24),
-                                    contentDescription = if (player.isPlaying) "暂停" else "播放",
-                                    colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
-                                )
+                            Text(
+                                text = "${player.playList[index].mediaMetadata.title}—${player.playList[index].mediaMetadata.artist}",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.padding(8.dp).weight(1.0f)
+                            )
+                            IconButton(onClick = {
+                                player.remove(index)
+                            }) {
+                                Icon(Icons.Filled.Clear, contentDescription = "Clear")
                             }
                         }
-                    } else {
-                        Image(
-                            painter = painterResource(R.drawable.baseline_music_disc_24),
-                            contentDescription = "Album",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(36.dp),
-                            colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
-                        )
-                        Text(
-                            text = "UU音乐 听你想听"
-                        )
                     }
                 }
+            },
+            sheetPeekHeight = 128.dp,
+        ) { paddingValues ->
+            Column(modifier = Modifier.padding(paddingValues)) {
+                content(player)
             }
-            LazyColumn(modifier = Modifier.fillMaxHeight(0.4f)) {
-                items(player.playList.size) { index ->
-                    HorizontalDivider()
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable {
-                        scope.launch {
-                            player.playIndex(index)
-                        }
-                    }) {
-                        Text(text = "${player.playList[index].mediaMetadata.title}—${player.playList[index].mediaMetadata.artist}",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(8.dp).weight(1.0f))
-                        IconButton(onClick = {
-                            player.remove(index)
-                        }){
-                            Icon(Icons.Filled.Clear, contentDescription = "Clear")
-                        }
-                    }
-                }
-            }
-        },
-        sheetPeekHeight = 128.dp,
-    ){ paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            content(player)
         }
     }
 }
@@ -194,8 +214,7 @@ fun PagingLazyColumn(count: Int, loadData: () -> Unit) {
 */
 
 
-/*
- * 音乐控制栏
+ //* 音乐控制栏
 @Composable
 fun NewMusicControllerBar() {
     val player = MusicPlayerController.getInstance()
@@ -280,7 +299,6 @@ fun NewMusicControllerBar() {
     }
 
 }
-*/
 @Composable
 fun NewBannerSection(cover: String, title: String, modifier: Modifier = Modifier) {
     // 这里可以放置轮播图或横幅广告

@@ -77,7 +77,7 @@ class SearchMusicActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier
                             .systemBarsPadding()
-                            .padding(start = 16.dp, end = 16.dp)
+                            .padding(start = 16.dp, end = 16.dp, bottom = 0.dp)
                             .fillMaxSize()
                     ) {
                         // 搜索栏

@@ -33,6 +33,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -145,17 +146,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
             LazyColumn(
-//                contentPadding = paddingValues,
                 modifier = Modifier.fillMaxSize()
             ) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
-                item { NewBannerSection(recommendCover, recommendTitle, modifier = Modifier.clickable {
-                    if(recommendId != 0L){
-                        scope.launch {
-                            MusicPlayerController.getInstance().playAtNow(recommendId)
+                item {
+                    NewBannerSection(recommendCover, recommendTitle, modifier = Modifier.clickable {
+                        if (recommendId != 0L) {
+                            scope.launch {
+                                MusicPlayerController.getInstance().playAtNow(recommendId)
+                            }
                         }
-                    }
-                }) }
+                    })
+                }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     SectionTitle(title = stringResource(if (diskList.isNotEmpty()) R.string.my_song_list else R.string.empty_song_list))
@@ -216,7 +218,10 @@ class MainActivity : ComponentActivity() {
                     )
                     Text(text = username!!, modifier = Modifier, fontSize = 18.sp)
                     Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = { SearchMusicActivity.gotoSearchMusicActivity(this@MainActivity) }, modifier = Modifier.padding(end = 8.dp)) {
+                    IconButton(
+                        onClick = { SearchMusicActivity.gotoSearchMusicActivity(this@MainActivity) },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search Icon"
@@ -289,7 +294,12 @@ class MainActivity : ComponentActivity() {
                         TextField(
                             value = text,
                             onValueChange = { newText -> text = newText.filter { it.isDigit() } },
-                            label = { Text(text = stringResource(R.string.edit_qq_hint)) },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.edit_qq_hint),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
@@ -336,7 +346,7 @@ class MainActivity : ComponentActivity() {
                 .putString("username", username)
                 .putString("avatar", avatar)
                 .apply()
-        } catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }
