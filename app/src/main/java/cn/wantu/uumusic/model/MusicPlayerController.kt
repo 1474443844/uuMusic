@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
@@ -17,6 +18,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import cn.wantu.uumusic.UUApp
+import cn.wantu.uumusic.data.SongInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -24,26 +26,50 @@ import java.io.File
 @OptIn(UnstableApi::class)
 class MusicPlayerController private constructor() {
 
+    // 播放器
     private val player: ExoPlayer
 
+    // 是否在播放
     var isPlaying by mutableStateOf(false)
         private set
+
+    // 是否准备好了
     var isPrepared by mutableStateOf(true)
         private set
+
+    // 进度条
     var progress by mutableFloatStateOf(0f)
+
+    // 播放列表
     var playList = emptyList<MediaItem>().toMutableStateList()
         private set
 
+    // 当前播放进度
+    var currentTime by mutableLongStateOf(0L)
+
+    // 当前播放的MediaItem
     val currentMediaItem: MediaItem?
         get() = player.currentMediaItem
+
+    // 当前播放进度
     val currentPosition: Long
-        get() = player.currentPosition
+        get() = player.currentPosition.also {
+            currentTime = it
+        }
+
+    // 播放总时长
     val duration: Long
         get() = player.duration
+
+    //当前媒体项索引
     val currentMediaItemIndex: Int
         get() = player.currentMediaItemIndex
+
+    // 媒体项总数
     val mediaItemCount: Int
         get() = playList.size
+
+    // 初始化媒体播放器
     init {
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true) // 允许跨协议重定向（https -> http）
@@ -60,6 +86,7 @@ class MusicPlayerController private constructor() {
     private fun setupPlayerListener() {
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlayingNow: Boolean) {
+                println("isPlayingNow: $isPlayingNow")
                 isPlaying = isPlayingNow
             }
 
@@ -67,19 +94,19 @@ class MusicPlayerController private constructor() {
                 super.onPlaybackStateChanged(playbackState)
                 println("Playback state changed: $playbackState")
                 when(playbackState){
-                    Player.STATE_BUFFERING -> {
+                    Player.STATE_BUFFERING -> { // 2
                         isPrepared = false
                     }
 
-                    Player.STATE_ENDED -> {
+                    Player.STATE_ENDED -> { // 4
 //                            TODO()
                     }
 
-                    Player.STATE_IDLE -> {
+                    Player.STATE_IDLE -> { // 1
 //                            TODO()
                     }
 
-                    Player.STATE_READY -> {
+                    Player.STATE_READY -> { // 3
                         isPrepared = true
                     }
                 }
@@ -88,20 +115,20 @@ class MusicPlayerController private constructor() {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 println("Media item transition: $mediaItem, reason: $reason")
                 when (reason) {
-                    Player.MEDIA_ITEM_TRANSITION_REASON_AUTO -> {
+                    Player.MEDIA_ITEM_TRANSITION_REASON_AUTO -> { // 1
                         player.pause()
                         player.play()
                     }
 
-                    Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED -> {
+                    Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED -> { // 3
 //                            isPrepared = false
                     }
 
-                    Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT -> {
+                    Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT -> { // 0
 //                            TODO()
                     }
 
-                    Player.MEDIA_ITEM_TRANSITION_REASON_SEEK -> {
+                    Player.MEDIA_ITEM_TRANSITION_REASON_SEEK -> { // 2
 //                            TODO()
                     }
                 }
@@ -129,7 +156,12 @@ class MusicPlayerController private constructor() {
     }
 
     private suspend fun createMediaItem(id: Long): MediaItem = withContext(Dispatchers.IO) {
-        val mediaInfo = getMusicMediaInfo(id)
+        val musicCache = File(downloadDir, "$id.json")
+        val mediaInfo = if (musicCache.exists()) {
+            generateMediaInfo(musicCache)
+        } else {
+            getMusicMediaInfo(id)
+        }
         val bundle = Bundle().apply {
             putString("cover", mediaInfo.cover)
         }
@@ -164,43 +196,89 @@ class MusicPlayerController private constructor() {
         player.seekToNext()
     }
     suspend fun playMusic(id: Long){
-        val musicCache = File(downloadDir, "$id.json")
-        if (musicCache.exists()) {
 
-        } else {
-
-            playAtNext(id)
-        }
     }
-
-
-    suspend fun playAtNow(id: Long) {
+    suspend fun playAtNow(song: SongInfo) {
         progress = 0f
+        val id = song.id
         if (mediaItemCount == 0) {
             val mediaItem = createMediaItem(id)
             player.addMediaItem(mediaItem)
-            player.play()
+//            isPrepared = true
+            play()
             playList.add(mediaItem)
             return
         }
+        pause()
+        isPrepared = false
         val mediaItemIndex = findMediaItemIndex(id)
         if (mediaItemIndex == -1) {
             val mediaItem = createMediaItem(id)
             player.addMediaItem(currentMediaItemIndex + 1, mediaItem)
             player.seekToNext()
-            player.play()
+//            isPrepared = true
+            play()
             playList.add(currentMediaItemIndex, mediaItem)
         } else {
             player.seekTo(mediaItemIndex, 0)
-            player.play()
+            play()
+        }
+    }
+    suspend fun playAtNow(id: Long) {
+        progress = 0f
+        if (mediaItemCount == 0) {
+            val mediaItem = createMediaItem(id)
+            player.addMediaItem(mediaItem)
+//            isPrepared = true
+            play()
+            playList.add(mediaItem)
+            return
+        }
+        pause()
+        isPrepared = false
+        val mediaItemIndex = findMediaItemIndex(id)
+        if (mediaItemIndex == -1) {
+            val mediaItem = createMediaItem(id)
+            player.addMediaItem(currentMediaItemIndex + 1, mediaItem)
+            player.seekToNext()
+//            isPrepared = true
+            play()
+            playList.add(currentMediaItemIndex, mediaItem)
+        } else {
+            player.seekTo(mediaItemIndex, 0)
+            play()
         }
     }
 
+    suspend fun playAtNext(song: SongInfo) {
+        if (mediaItemCount == 0) {
+            playAtNow(song)
+            return
+        }
+        val id = song.id
+        pause()
+        isPrepared = false
+        val mediaItemIndex = findMediaItemIndex(id)
+
+        if (mediaItemIndex == -1) {
+            val mediaItem = createMediaItem(id)
+            player.addMediaItem(currentMediaItemIndex + 1, mediaItem)
+            playList.add(currentMediaItemIndex+1, mediaItem)
+        } else {
+            println("mediaItemIndex = $mediaItemIndex, currentMediaItemIndex = $currentMediaItemIndex")
+            val mediaItem = playList[mediaItemIndex]
+            player.moveMediaItem(mediaItemIndex, currentMediaItemIndex + 1)
+            playList.remove(mediaItem)
+            playList.add(currentMediaItemIndex + 1, mediaItem)
+        }
+    }
     suspend fun playAtNext(id: Long) {
         if (mediaItemCount == 0) {
             playAtNow(id)
             return
         }
+        pause()
+        isPrepared = false
         val mediaItemIndex = findMediaItemIndex(id)
 
         if (mediaItemIndex == -1) {

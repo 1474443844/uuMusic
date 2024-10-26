@@ -10,10 +10,12 @@ import cn.wantu.uumusic.data.SongInfo
 import cn.wantu.uumusic.data.UserInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import kotlin.math.ceil
 
@@ -108,7 +110,9 @@ suspend fun getDiskDetail(id: Long, page: Int = 1): DiskDetail = withContext(Dis
     )
 }
 
-
+suspend fun generateMediaInfo(f: File) : MediaInfo = withContext(Dispatchers.IO){
+    json.decodeFromString(f.readText())
+}
 suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dispatchers.IO) {
     val data = baseRequest("/geturl?id=$id&quality=$q").getJSONObject("data")
     var url = data.getString("url")
@@ -116,15 +120,26 @@ suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dis
         url = baseRequest("/geturl?id=$id").getJSONObject("data").getString("url")
     }
     if (MusicPlayerController.isCache) {
-        val destination = File(MusicPlayerController.downloadDir, id.toString())
-        if (downloadFile(url, destination))
-            return@withContext MediaInfo(
-                song = data.getString("song"),
-                singer = data.getString("singer"),
+        val song = data.getString("song")
+        val singer = data.getString("singer")
+        val destination = File(MusicPlayerController.downloadDir, "${song}-$singer".replace("/", "\\"))
+        if (downloadFile(url, destination)) {
+            val mediaInfo = MediaInfo(
+                song = song,
+                singer = singer,
                 album = data.getString("album"),
                 url = destination.toUri().toString(),
                 cover = data.getString("cover")
             )
+            FileOutputStream(File(MusicPlayerController.downloadDir, "$id.json")).use { output ->
+                output.write(
+                    json.encodeToString(
+                        mediaInfo
+                    ).toByteArray()
+                )
+            }
+            return@withContext mediaInfo
+        }
     }
     MediaInfo(
         song = data.getString("song"), singer = data.getString("singer"),

@@ -1,5 +1,8 @@
 package cn.wantu.uumusic.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class MediaInfo(
     val song: String,
     val singer: String,

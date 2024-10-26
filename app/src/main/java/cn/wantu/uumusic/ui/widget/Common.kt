@@ -23,11 +23,9 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,7 +80,7 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
             scaffoldState = scaffoldState,
             topBar = topBar,
             sheetContent = {
-                Row (Modifier.height(128.dp)) {
+                Row (Modifier.height(96.dp)) {
                     val context = LocalContext.current
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
                         player.currentMediaItem?.mediaId?.toLong()
@@ -100,9 +98,6 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
                                 modifier = Modifier
                                     .padding(8.dp)
                                     .size(48.dp)
-                                    .clickable {
-                                        player.showPlayList()
-                                    }
                             )
                             Text(
                                 text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
@@ -120,7 +115,7 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
                                         while (player.isPlaying) {
                                             player.progress =
                                                 player.currentPosition.toFloat() / player.duration
-                                            delay(200)
+                                            delay(100)
                                         }
                                     }
                                 }
@@ -195,115 +190,6 @@ fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit
     }
 }
 
-/*
- * 分页加载列表
-@Composable
-fun PagingLazyColumn(count: Int, loadData: () -> Unit) {
-    val listState = rememberLazyListState()
-    var isLoading by remember { mutableStateOf(false) }
-
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
-            .collect { visibleItemCount ->
-                val totalItemCount = listState.layoutInfo.totalItemsCount
-                if (totalItemCount < count) {
-                    if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
-                        isLoading = true
-                        loadData()
-                        isLoading = false
-                    }
-                }
-            }
-    }
-}
-*/
-
-
- //* 音乐控制栏
-@Composable
-fun NewMusicControllerBar() {
-    val player = MusicPlayerController.getInstance()
-    Box(Modifier.height(128.dp)) {
-        BottomAppBar {
-            if (player.playList.size > 0 || !player.isPrepared) {
-                val mediaItem = player.currentMediaItem
-                val mediaMetadata = mediaItem?.mediaMetadata
-                val extras = mediaMetadata?.extras
-                AsyncImage(
-                    model = extras?.getString("cover"),
-                    contentDescription = "Album",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(48.dp)
-                        .clickable {
-                            player.showPlayList()
-                        }
-                )
-                Text(
-                    text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp)
-                )
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(end = 8.dp)) {
-                    val scope = rememberCoroutineScope()
-                    LaunchedEffect(player.isPlaying) {
-                        scope.launch {
-                            while (player.isPlaying) {
-                                player.progress =
-                                    player.currentPosition.toFloat() / player.duration
-                                delay(200)
-                            }
-                        }
-                    }
-                    if (player.isPrepared) {
-                        CircularProgressIndicator(
-                            progress = { player.progress },
-                            trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
-                        )
-                    } else {
-                        CircularProgressIndicator()
-                    }
-                    IconButton(onClick = {
-                        if (player.isPlaying) {
-                            player.pause()
-                        } else {
-                            player.play()
-                        }
-                    }) {
-                        Image(
-                            painter = painterResource(if (player.isPlaying) R.drawable.baseline_pause_24 else R.drawable.baseline_play_arrow_24),
-                            contentDescription = if (player.isPlaying) "暂停" else "播放",
-                            colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
-                        )
-                    }
-                }
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.baseline_music_disc_24),
-                    contentDescription = "Album",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(36.dp),
-                    colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
-                )
-                Text(
-                    text = "UU音乐 听你想听"
-                )
-            }
-        }
-    }
-    LazyColumn(modifier = Modifier.fillMaxHeight(0.4f)) {
-        items(player.playList) {
-            HorizontalDivider()
-            Text(text = it.mediaMetadata.title.toString(), modifier = Modifier.padding(8.dp))
-        }
-    }
-
-}
 @Composable
 fun NewBannerSection(cover: String, title: String, modifier: Modifier = Modifier) {
     // 这里可以放置轮播图或横幅广告
@@ -322,29 +208,7 @@ fun NewBannerSection(cover: String, title: String, modifier: Modifier = Modifier
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        Text(text = title, modifier = Modifier.background(Color.Black.copy(alpha = 0.6f)).padding(6.dp).align(Alignment.BottomEnd), color = Color.White)
-    }
-}
-// 横幅
-@Composable
-fun BannerSection() {
-    // 这里可以放置轮播图或横幅广告
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(8.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
-            // painter = painterResource(id = R.drawable.banner_placeholder),
-            contentDescription = "Banner",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        Text(text = "我是一个Banner")
+        Text(text = title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.background(Color.Black.copy(alpha = 0.6f)).padding(6.dp).align(Alignment.BottomEnd), color = Color.White)
     }
 }
 

@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,7 +28,6 @@ import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import cn.wantu.uumusic.ui.widget.LrcFile
 import cn.wantu.uumusic.ui.widget.LyricsScreen
 import cn.wantu.uumusic.ui.widget.parseLrcString
-import kotlinx.coroutines.delay
 
 class SongDisplayActivity : ComponentActivity() {
     private var id = 0L
@@ -56,29 +54,20 @@ class SongDisplayActivity : ComponentActivity() {
     }
     @Composable
     fun LyricsApp() {
+        val player = MusicPlayerController.getInstance()
         var lrcFile by remember { mutableStateOf<LrcFile?>(null) }
-        var currentTime by remember { mutableLongStateOf(0L) }
 
         // 模拟从网络获取歌词
         LaunchedEffect(Unit) {
             val lrcContent = getMusicLrc(id)
-
             lrcFile = parseLrcString(lrcContent)
         }
 
-        // 模拟播放时间更新
-        LaunchedEffect(Unit) {
-            val player = MusicPlayerController.getInstance()
-            while (true) {
-                delay(100)
-                currentTime = player.currentPosition
-            }
-        }
 
         if (lrcFile != null) {
             LyricsScreen(
                 lyrics = lrcFile!!.lyrics,
-                currentTime = currentTime,
+                currentTime = player.currentTime,
                 metadata = lrcFile!!.metadata
             )
         } else {

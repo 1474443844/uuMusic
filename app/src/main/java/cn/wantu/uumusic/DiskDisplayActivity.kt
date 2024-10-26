@@ -105,7 +105,6 @@ class DiskDisplayActivity : ComponentActivity() {
                         })
                     }
                 ) {  player ->
-
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -138,11 +137,11 @@ class DiskDisplayActivity : ComponentActivity() {
                                         .padding(10.dp)
                                         .clickable {
                                             scope.launch {
-                                                player.playAtNow(song.id)
+                                                player.playAtNow(song)
                                             }
                                         }) {
                                     scope.launch {
-                                        player.playAtNext(song.id)
+                                        player.playAtNext(song)
                                     }
                                 }
                                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
