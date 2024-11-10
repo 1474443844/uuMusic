@@ -42,7 +42,7 @@ jobs:
       - name: Upload APK to GitHub Release
         if: success()  # Only proceed if the build is successful
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.4
         with:
           tag_name: v${{ github.run_number }}  # You can change this to use a version number from your Gradle file
           release_name: "Release v${{ github.run_number }}"
@@ -54,10 +54,10 @@ jobs:
 
       - name: Upload APK asset to Release
         if: success()  # Only upload if the release was created successfully
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v1.0.1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/release/*.apk
+          asset_path: ./app/release/uuMusic-v*.apk
           asset_name: "uuMusic-release-${{ github.run_number }}.apk"  # You can modify the name as needed
           asset_content_type: application/vnd.android.package-archive
         env:
