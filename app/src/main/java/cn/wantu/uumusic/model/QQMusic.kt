@@ -2,6 +2,7 @@ package cn.wantu.uumusic.model
 
 import androidx.core.net.toUri
 import cn.wantu.uumusic.UUApp
+import cn.wantu.uumusic.UUApp.Companion.json
 import cn.wantu.uumusic.data.DiskDetail
 import cn.wantu.uumusic.data.DiskInfo
 import cn.wantu.uumusic.data.MediaInfo
@@ -11,7 +12,6 @@ import cn.wantu.uumusic.data.UserInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
@@ -19,7 +19,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 private const val baseUrl = "https://api.vkeys.cn/v2/music/tencent"
-private val json = Json { ignoreUnknownKeys = true }
 private const val Result_OK = 200
 private const val Params_Error = 302
 private const val Token_Invalid = 303

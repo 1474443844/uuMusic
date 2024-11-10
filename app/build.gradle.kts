@@ -16,7 +16,7 @@ android {
         applicationId = "cn.wantu.uumusic"
         minSdk = 24
         targetSdk = 34
-        versionCode = 24111001
+        versionCode = 24111101
         versionName = "0.0.3-preview"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

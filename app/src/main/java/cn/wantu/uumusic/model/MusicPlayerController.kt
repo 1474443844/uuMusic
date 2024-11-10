@@ -69,7 +69,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(UnstableApi::class)
 class MusicPlayerController private constructor() {
@@ -84,6 +86,8 @@ class MusicPlayerController private constructor() {
     // 是否准备好了
     var isPrepared by mutableStateOf(true)
         private set
+
+    val plF = File(UUApp.instance.filesDir, "playingList.json")
 
     // 播放列表
     var playList = emptyList<PlayListItem>().toMutableStateList()
@@ -137,6 +141,9 @@ class MusicPlayerController private constructor() {
         player.repeatMode = Player.REPEAT_MODE_ALL
         player.prepare()
         GlobalScope.launch {
+            if (plF.exists()){
+                addList2player(UUApp.json.decodeFromString(plF.readText()))
+            }
             while (true) {
                 if (isPlaying) {
                     updateProgress()
@@ -263,29 +270,55 @@ class MusicPlayerController private constructor() {
         player.seekToNext()
     }
 
+    private fun savePlayingList(){
+        FileOutputStream(plF).use { output ->
+            output.write(
+                UUApp.json.encodeToString(
+                    playList.toList().also {
+                        println(it)
+                    }
+                ).toByteArray()
+            )
+        }
+    }
+
+    private suspend fun addList2player(list: List<PlayListItem>) = withContext(Dispatchers.Main) {
+        for (item in list){
+            playList.add(item)
+            val mediaItem = createMediaItem(item.id) // generate MediaItem
+            player.addMediaItem(mediaItem) // add MediaItem to player
+        }
+    }
 
     suspend fun playAtNow(song: SongInfo) {
+        playAtNow(id = song.id, song = song.song, singer = song.singer, cover = song.cover)
+    }
+
+    suspend fun playAtNow(id: Long, song: String, singer: String, cover: String) {
+        playAtNow(PlayListItem(id, song, singer, cover))
+    }
+    suspend fun playAtNow(playItem: PlayListItem) {
         pause() // stop Music
         progress = 0f
         isPrepared = false
-        val id = song.id
-        val playItem = PlayListItem(id, song.song, song.singer, song.cover) // generate playListItem
         if (playListCount == 0) { // if there is nothing in playList
             currentPlayingIndex = 0 // reset currentIndex = 0
             playList.add(playItem) // add playItem to playList
-            val mediaItem = createMediaItem(id) // generate MediaItem
+            savePlayingList()
+            val mediaItem = createMediaItem(playItem.id) // generate MediaItem
             player.addMediaItem(mediaItem) // add MediaItem to player
             mPlay() // play music
             return
         }
-        val itemIndex = findItemIndex(id)
+        val itemIndex = findItemIndex(playItem.id)
         // if there is no item equaling dest
         if (itemIndex == -1) {
             // 将指针移到下一首
             currentPlayingIndex += 1
             // add playItem to playList
             playList.add(currentPlayingIndex, playItem)
-            val mediaItem = createMediaItem(id)
+            savePlayingList()
+            val mediaItem = createMediaItem(playItem.id)
             // add MediaItem to player
             player.addMediaItem(_mCurrentPlayingIndex + 1, mediaItem)
             // play music
@@ -299,17 +332,20 @@ class MusicPlayerController private constructor() {
     }
 
     suspend fun playAtNext(song: SongInfo) {
+        playAtNext(id = song.id, song = song.song, singer = song.singer, cover = song.cover)
+    }
+    suspend fun playAtNext(id: Long, song: String, singer: String, cover: String) {
         if (playListCount == 0) {
-            playAtNow(song)
+            playAtNow(id, song, singer, cover)
             return
         }
-        val id = song.id
         val itemIndex = findItemIndex(id)
         if (itemIndex == -1) {
             playList.add(
                 currentPlayingIndex + 1 + offset,
-                PlayListItem(id, song.song, song.singer, song.cover)
+                PlayListItem(id, song, singer, cover)
             )
+            savePlayingList()
             val mediaItem = createMediaItem(id)
             player.addMediaItem(_mCurrentPlayingIndex + 1 + offset, mediaItem)
             println("should be insert ${currentPlayingIndex + 1 + offset}")
@@ -322,6 +358,7 @@ class MusicPlayerController private constructor() {
                 currentPlayingIndex -= 1
             }
             playList.add(currentPlayingIndex+offset+1, mediaItem)
+            savePlayingList()
             player.moveMediaItem(itemIndex, _mCurrentPlayingIndex + 1 + offset)
             offset += 1
         }
@@ -387,6 +424,7 @@ fun WithMusicBar(
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
     val player = MusicPlayerController.getInstance()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -517,7 +555,7 @@ fun WithMusicBar(
 @Serializable
 data class PlayListItem(
     val id: Long,
-    var title: String = "",
-    var singer: String = "",
-    var cover: String = "",
+    val title: String = "",
+    val singer: String = "",
+    val cover: String = "",
 )

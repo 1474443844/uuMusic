@@ -68,7 +68,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -81,7 +80,6 @@ class MainActivity : DefaultActivity() {
     private var recommendId by mutableLongStateOf(0L)
     // Test
 
-    private val json = Json { ignoreUnknownKeys = true }
     private val userInfoEditor =
         UUApp.instance.getSharedPreferences("UserInfo", MODE_PRIVATE)
     private val file = File(UUApp.instance.filesDir, "diskList.json")
@@ -99,7 +97,7 @@ class MainActivity : DefaultActivity() {
     private var avatar by mutableStateOf(userInfoEditor.getString("avatar", ""))
     private var isLogin by mutableStateOf(qq != "")
     private var diskList by mutableStateOf(
-        if (file.exists()) json.decodeFromString(file.readText())
+        if (file.exists()) UUApp.json.decodeFromString(file.readText())
         else emptyList<DiskInfo>()
     )
 
@@ -123,6 +121,51 @@ class MainActivity : DefaultActivity() {
         }
     }
 
+    private suspend fun login(qq: String) = withContext(Dispatchers.IO) {
+        try {
+            val qqInfo =
+                getQQInfo(qq = qq)
+            username = qqInfo.userInfo.name
+            avatar = qqInfo.userInfo.pic
+            diskList = listOf(qqInfo.likesong) + qqInfo.mydiss + qqInfo.likediss
+            FileOutputStream(file).use { output ->
+                output.write(
+                    UUApp.json.encodeToString(
+                        diskList
+                    ).toByteArray()
+                )
+            }
+            userInfoEditor.edit()
+                .putString("username", username)
+                .putString("avatar", avatar)
+                .apply()
+        } catch (e: Exception) {
+            try {
+                val jsonObj = JSONObject(e.message!!)
+                if(jsonObj.getInt("code") == 500){
+                    if(avatar == ""){
+                        logout()
+                        withContext(Dispatchers.Main){
+                            Toast.makeText(UUApp.context, "登录失败", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+            e.printStackTrace()
+        }
+    }
+
+    private fun logout() {
+        qq = ""
+        username = getString(R.string.not_login)
+        avatar = ""
+        isLogin = false
+        userInfoEditor.edit().clear().apply()
+        diskList = emptyList()
+        file.delete()
+    }
     @Composable
     private fun MainLayout() {
         val scope = rememberCoroutineScope()
@@ -320,52 +363,5 @@ class MainActivity : DefaultActivity() {
             )
         }
     }
-
-    private suspend fun login(qq: String) = withContext(Dispatchers.IO) {
-        try {
-            val qqInfo =
-                getQQInfo(qq = qq)
-            username = qqInfo.userInfo.name
-            avatar = qqInfo.userInfo.pic
-            diskList = listOf(qqInfo.likesong) + qqInfo.mydiss + qqInfo.likediss
-            FileOutputStream(file).use { output ->
-                output.write(
-                    json.encodeToString(
-                        diskList
-                    ).toByteArray()
-                )
-            }
-            userInfoEditor.edit()
-                .putString("username", username)
-                .putString("avatar", avatar)
-                .apply()
-        } catch (e: Exception) {
-            try {
-                val jsonObj = JSONObject(e.message!!)
-                if(jsonObj.getInt("code") == 500){
-                    if(avatar == ""){
-                        logout()
-                        withContext(Dispatchers.Main){
-                            Toast.makeText(UUApp.context, "登录失败", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }catch (e: Exception){
-                e.printStackTrace()
-            }
-            e.printStackTrace()
-        }
-    }
-
-    private fun logout() {
-        qq = ""
-        username = getString(R.string.not_login)
-        avatar = ""
-        isLogin = false
-        userInfoEditor.edit().clear().apply()
-        diskList = emptyList()
-        file.delete()
-    }
-
 
 }
