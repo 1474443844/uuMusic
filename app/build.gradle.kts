@@ -24,7 +24,7 @@ android {
             useSupportLibrary = true
         }
     }
-    val keystorePropertiesFile = rootProject.file("local.properties")
+    val keystorePropertiesFile = rootProject.file("signing.properties")
     val keystoreProperties = Properties()
     if (keystorePropertiesFile.exists()) {
         keystoreProperties.load(FileInputStream(keystorePropertiesFile))
