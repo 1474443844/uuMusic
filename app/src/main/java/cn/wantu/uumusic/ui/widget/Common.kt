@@ -9,189 +9,41 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.wantu.uumusic.R
-import cn.wantu.uumusic.SongDisplayActivity
 import cn.wantu.uumusic.data.DiskInfo
 import cn.wantu.uumusic.data.SongInfo
-import cn.wantu.uumusic.model.MusicPlayerController
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun WithMusicBar(modifier: Modifier = Modifier,  topBar: @Composable (() -> Unit)? = null, content: @Composable (MusicPlayerController) -> Unit) {
-    val scope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
-    val player = MusicPlayerController.getInstance()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(WindowInsets.systemBars.only(WindowInsetsSides.Bottom).asPaddingValues()) // 动态适配状态栏和导航栏
-    ) {
-        BottomSheetScaffold(
-            modifier = modifier,
-            scaffoldState = scaffoldState,
-            topBar = topBar,
-            sheetContent = {
-                Row (Modifier.height(96.dp)) {
-                    val context = LocalContext.current
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
-                        player.currentMediaItem?.mediaId?.toLong()
-                            ?.let { SongDisplayActivity.showSongDetails(context, it) }
-                    }) {
-                        println("player.playList.size = ${player.playList.size}, player.isPrepared = ${player.isPrepared}")
-                        if (player.playList.size > 0 || !player.isPrepared) {
-                            val mediaItem = player.currentMediaItem
-                            val mediaMetadata = mediaItem?.mediaMetadata
-                            val extras = mediaMetadata?.extras
-                            AsyncImage(
-                                model = extras?.getString("cover"),
-                                contentDescription = "Album",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .size(48.dp)
-                            )
-                            Text(
-                                text = "${mediaMetadata?.title} - ${mediaMetadata?.artist}",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 8.dp)
-                            )
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                LaunchedEffect(player.isPlaying) {
-                                    scope.launch {
-                                        while (player.isPlaying) {
-                                            player.progress =
-                                                player.currentPosition.toFloat() / player.duration
-                                            delay(100)
-                                        }
-                                    }
-                                }
-                                if (player.isPrepared) {
-                                    CircularProgressIndicator(
-                                        progress = { player.progress },
-                                        trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
-                                    )
-                                } else {
-                                    CircularProgressIndicator()
-                                }
-                                IconButton(onClick = {
-                                    if (player.isPlaying) {
-                                        player.pause()
-                                    } else {
-                                        player.play()
-                                    }
-                                }) {
-                                    Image(
-                                        painter = painterResource(if (player.isPlaying) R.drawable.baseline_pause_24 else R.drawable.baseline_play_arrow_24),
-                                        contentDescription = if (player.isPlaying) "暂停" else "播放",
-                                        colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
-                                    )
-                                }
-                            }
-                        } else {
-                            Image(
-                                painter = painterResource(R.drawable.baseline_music_disc_24),
-                                contentDescription = "Album",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .size(36.dp),
-                                colorFilter = ColorFilter.tint(if (isSystemInDarkTheme()) Color.White else Color.Black)
-                            )
-                            Text(
-                                text = "UU音乐 听你想听"
-                            )
-                        }
-                    }
-                }
-                LazyColumn(modifier = Modifier.fillMaxHeight(0.4f)) {
-                    items(player.playList.size) { index ->
-                        HorizontalDivider()
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                scope.launch {
-                                    player.playIndex(index)
-                                }
-                            }) {
-                            Text(
-                                text = "${player.playList[index].mediaMetadata.title}—${player.playList[index].mediaMetadata.artist}",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.padding(8.dp).weight(1.0f)
-                            )
-                            IconButton(onClick = {
-                                player.remove(index)
-                            }) {
-                                Icon(Icons.Filled.Clear, contentDescription = "Clear")
-                            }
-                        }
-                    }
-                }
-            },
-            sheetPeekHeight = 128.dp,
-        ) { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues)) {
-                content(player)
-            }
-        }
-    }
-}
 
 @Composable
-fun NewBannerSection(cover: String, title: String, modifier: Modifier = Modifier) {
+fun BannerSection(cover: String, title: String, modifier: Modifier = Modifier) {
     // 这里可以放置轮播图或横幅广告
     Box(
         modifier = modifier
@@ -208,7 +60,15 @@ fun NewBannerSection(cover: String, title: String, modifier: Modifier = Modifier
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        Text(text = title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.background(Color.Black.copy(alpha = 0.6f)).padding(6.dp).align(Alignment.BottomEnd), color = Color.White)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier
+                .background(Color.Black.copy(alpha = 0.6f))
+                .padding(6.dp)
+                .align(Alignment.BottomEnd),
+            color = Color.White
+        )
     }
 }
 

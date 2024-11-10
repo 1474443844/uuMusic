@@ -1,9 +1,6 @@
 package cn.wantu.uumusic
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -54,17 +51,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import cn.wantu.uumusic.activity.DefaultActivity
 import cn.wantu.uumusic.data.DiskInfo
-import cn.wantu.uumusic.model.MusicPlayerController
+import cn.wantu.uumusic.model.WithMusicBar
 import cn.wantu.uumusic.model.getQQInfo
 import cn.wantu.uumusic.model.getRecommendSong
-import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import cn.wantu.uumusic.ui.widget.ArtistSection
-import cn.wantu.uumusic.ui.widget.NewBannerSection
+import cn.wantu.uumusic.ui.widget.BannerSection
 import cn.wantu.uumusic.ui.widget.NewSongsSection
 import cn.wantu.uumusic.ui.widget.PlaylistItem
 import cn.wantu.uumusic.ui.widget.SectionTitle
-import cn.wantu.uumusic.ui.widget.WithMusicBar
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -73,10 +69,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 
-class MainActivity : ComponentActivity() {
+class MainActivity : DefaultActivity() {
 
     // Test 试行区
     private var recommendCover by mutableStateOf("")
@@ -86,8 +83,8 @@ class MainActivity : ComponentActivity() {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val userInfoEditor =
-        UUApp.getInstance().getSharedPreferences("UserInfo", MODE_PRIVATE)
-    private val file = File(UUApp.getInstance().filesDir, "diskList.json")
+        UUApp.instance.getSharedPreferences("UserInfo", MODE_PRIVATE)
+    private val file = File(UUApp.instance.filesDir, "diskList.json")
 
     private var dropDownMenuExpanded by mutableStateOf(false)
     private var showEditQQDialog by mutableStateOf(false)
@@ -96,7 +93,7 @@ class MainActivity : ComponentActivity() {
     private var username by mutableStateOf(
         userInfoEditor.getString(
             "username",
-            UUApp.getInstance().getString(R.string.not_login)
+            UUApp.instance.getString(R.string.not_login)
         )
     )
     private var avatar by mutableStateOf(userInfoEditor.getString("avatar", ""))
@@ -106,9 +103,12 @@ class MainActivity : ComponentActivity() {
         else emptyList<DiskInfo>()
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    @Composable
+    override fun SetupUI() {
+        MainLayout()
+    }
 
+    override fun doBeforeUI() {
         lifecycleScope.launch {
             getRecommendSong { title, cover, id ->
                 recommendTitle = title
@@ -121,13 +121,6 @@ class MainActivity : ComponentActivity() {
                 login(qq!!) // 更新信息
             }
         }
-        enableEdgeToEdge()
-        setContent {
-            UUMusicTheme {
-                MainLayout()
-            }
-        }
-
     }
 
     @Composable
@@ -150,10 +143,10 @@ class MainActivity : ComponentActivity() {
             ) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
                 item {
-                    NewBannerSection(recommendCover, recommendTitle, modifier = Modifier.clickable {
+                    BannerSection(recommendCover, recommendTitle, modifier = Modifier.clickable {
                         if (recommendId != 0L) {
                             scope.launch {
-                                MusicPlayerController.getInstance().playAtNow(recommendId)
+//                                MusicPlayerController.getInstance().playAtNow(recommendId)
                             }
                         }
                     })
@@ -347,6 +340,19 @@ class MainActivity : ComponentActivity() {
                 .putString("avatar", avatar)
                 .apply()
         } catch (e: Exception) {
+            try {
+                val jsonObj = JSONObject(e.message!!)
+                if(jsonObj.getInt("code") == 500){
+                    if(avatar == ""){
+                        logout()
+                        withContext(Dispatchers.Main){
+                            Toast.makeText(UUApp.context, "登录失败", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
             e.printStackTrace()
         }
     }

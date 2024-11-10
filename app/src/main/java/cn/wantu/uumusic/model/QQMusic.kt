@@ -17,7 +17,6 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlin.math.ceil
 
 private const val baseUrl = "https://api.vkeys.cn/v2/music/tencent"
 private val json = Json { ignoreUnknownKeys = true }
@@ -32,46 +31,13 @@ private const val Vps_Error = 504
 private const val Tips_Message = 600
 private const val Tips_Error = 601
 
-suspend fun getRecommendSong(callBack: (String, String, Long) -> Unit) = withContext(Dispatchers.IO) {
-    val request = Request.Builder()
-        .url("http://www.wty5.cn/uuMusic.json")
-        .get()
-        .build()
-    UUApp.getClient().newCall(request).execute().use { response ->
-        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        val responseData = response.body?.string()
-        // 解析 JSON 数据
-        val result = JSONObject(responseData!!)
-        val recommendSongId = result.getLong("songId")
-        val mediaInfo = getMusicMediaInfo(recommendSongId)
-        callBack(mediaInfo.song, mediaInfo.cover, recommendSongId)
-    }
-}
-suspend fun getRecommendSongs(callBack: (String, String) -> Unit) = withContext(Dispatchers.IO) {
-    val request = Request.Builder()
-        .url("http://www.wty5.cn/uuMusic.json")
-        .get()
-        .build()
-    UUApp.getClient().newCall(request).execute().use { response ->
-        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        val responseData = response.body?.string()
-        // 解析 JSON 数据
-        val result = JSONObject(responseData!!)
-        val recommendSongsId = result.getLong("songsId")
-        val recommendSongIndex = result.getInt("index")
-        val diskDetail =
-            getDiskDetail(recommendSongsId, ceil(recommendSongIndex / 10f).toInt())
-        val songInfo = diskDetail.songs[recommendSongIndex - 1]
-        callBack(songInfo.song, songInfo.cover)
-    }
-}
 
 suspend fun baseRequest(route: String): JSONObject = withContext(Dispatchers.IO) {
     val request = Request.Builder()
         .url("$baseUrl$route")
         .get()
         .build()
-    UUApp.getClient().newCall(request).execute().use { response ->
+    UUApp.client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
         val responseData = response.body?.string()
         // 解析 JSON 数据
@@ -122,16 +88,18 @@ suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dis
     if (MusicPlayerController.isCache) {
         val song = data.getString("song")
         val singer = data.getString("singer")
-        val destination = File(MusicPlayerController.downloadDir, "${song}-$singer".replace("/", "\\"))
+        val destination = File(MusicPlayerController.downloadDir, "${song}-$singer".replace("/", "&"))
+        val lrcFile = File(MusicPlayerController.downloadDir, "${song}-$singer.lrc".replace("/", "&"))
         if (downloadFile(url, destination)) {
             val mediaInfo = MediaInfo(
                 song = song,
                 singer = singer,
                 album = data.getString("album"),
                 url = destination.toUri().toString(),
+                lrc = lrcFile.toUri().toString(),
                 cover = data.getString("cover")
             )
-            FileOutputStream(File(MusicPlayerController.downloadDir, "$id.json")).use { output ->
+            FileOutputStream(File(MusicPlayerController.downloadDir, "info/$id.json")).use { output ->
                 output.write(
                     json.encodeToString(
                         mediaInfo
@@ -143,7 +111,7 @@ suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dis
     }
     MediaInfo(
         song = data.getString("song"), singer = data.getString("singer"),
-        album = data.getString("album"), url = url, cover = data.getString("cover")
+        album = data.getString("album"), url = url, lrc = "", cover = data.getString("cover")
     )
 }
 
@@ -151,7 +119,7 @@ suspend fun downloadFile(url: String, destination: File, overwrite: Boolean = fa
     withContext(Dispatchers.IO) {
         if (!overwrite && destination.exists()) return@withContext true
         val request = Request.Builder().url(url).build()
-        UUApp.getClient().newCall(request).execute().use { response ->
+        UUApp.client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) return@withContext false
             response.body?.byteStream()?.use { input ->
                 destination.outputStream().use { output ->
@@ -173,7 +141,7 @@ suspend fun getMusicDownloadUrl(id: Long, q: Int = 8): String = withContext(Disp
 
 suspend fun checkDownloadUrl(url: String): Boolean = withContext(Dispatchers.IO) {
     val request = Request.Builder().url(url).head().build()
-    UUApp.getClient().newCall(request).execute().use { response ->
+    UUApp.client.newCall(request).execute().use { response ->
         if (response.isSuccessful) {
             !response.headers("Content-Type").contains("application/json")
         } else {

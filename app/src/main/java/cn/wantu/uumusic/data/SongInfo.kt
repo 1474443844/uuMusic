@@ -29,9 +29,9 @@ data class SongInfo(
     @SerialName("singer")
     val singer: String,
     @SerialName("singer_list")
-    val singerList: List<Singer>,
+    val singerList: List<Singer>? = null,
     @SerialName("time")
-    val time: String,
+    val time: String = "",
 )
 
 @Serializable
@@ -43,11 +43,5 @@ data class Singer(
     @SerialName("name")
     val name: String,
     @SerialName("title")
-    val title: String,
-//    @SerialName("pmid")
-//    val pmid: String,
-//    @SerialName("type")
-//    val type: Int,
-//    @SerialName("uin")
-//    val uin: Int
+    val title: String
 )

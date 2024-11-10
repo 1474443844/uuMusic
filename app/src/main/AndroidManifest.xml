@@ -17,18 +17,12 @@
         android:theme="@style/Theme.UUMusic"
         tools:targetApi="31">
         <activity
+            android:name=".SettingsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.UUMusic" />
+        <activity
             android:name=".SongDisplayActivity"
             android:exported="false"
-            android:theme="@style/Theme.UUMusic" />
-        <activity
-            android:name=".ui.test.MainActivity2"
-            android:exported="true"
-            android:label="@string/title_activity_main2"
-            android:theme="@style/Theme.UUMusic" />
-        <activity
-            android:name=".ui.test.MainActivity"
-            android:exported="true"
-            android:label="@string/title_activity_main"
             android:theme="@style/Theme.UUMusic" />
         <activity
             android:name=".SearchMusicActivity"

@@ -8,5 +8,6 @@ data class MediaInfo(
     val singer: String,
     val album: String,
     val url: String,
+    val lrc: String,
     val cover: String
 )

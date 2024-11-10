@@ -3,10 +3,6 @@ package cn.wantu.uumusic
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -27,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,127 +41,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import cn.wantu.uumusic.activity.DefaultActivity
 import cn.wantu.uumusic.data.SongInfo
+import cn.wantu.uumusic.model.WithMusicBar
 import cn.wantu.uumusic.model.getDiskDetail
-import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import cn.wantu.uumusic.ui.widget.SongItem
-import cn.wantu.uumusic.ui.widget.WithMusicBar
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class DiskDisplayActivity : ComponentActivity() {
+class DiskDisplayActivity : DefaultActivity() {
     private var songSize = -1
     private var page = 1
     private var id = 0L
-    private var isExpanded by mutableStateOf(false)
+    private val songList = emptyList<SongInfo>().toMutableStateList()
+    private var showErrorInfo by mutableStateOf(false)
+    private var errorInfo by mutableStateOf("")
 
-    @OptIn(ExperimentalMaterial3Api::class)
+
+    private lateinit var diskName: String
+    private lateinit var diskCover: String
+
+    override fun doBeforeUI() {
+        diskName = intent.getStringExtra("name")!!
+        diskCover = intent.getStringExtra("cover")!!
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val diskName = intent.getStringExtra("name")
-        val diskCover = intent.getStringExtra("cover")
-        val songList = emptyList<SongInfo>().toMutableStateList()
-        var showErrorInfo by mutableStateOf(false)
-        var errorInfo by mutableStateOf("")
-
-        enableEdgeToEdge()
-        setContent {
-            UUMusicTheme {
-                val scope = rememberCoroutineScope()
-                val listState = rememberLazyListState()
-                var isLoading by remember { mutableStateOf(false) }
-
-                LaunchedEffect(listState) {
-                    snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
-                        .collect { visibleItemCount ->
-                            val totalItemCount = listState.layoutInfo.totalItemsCount
-                            if (totalItemCount < songSize) {
-                                if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
-                                    isLoading = true
-                                    val diskDetail = getDiskDetail(id, page)
-                                    songList.addAll(diskDetail.songs)
-                                    page++
-                                    isLoading = false
-                                }
-                            }
-                        }
-                }
-
-                WithMusicBar(topBar = {
-                        TopAppBar(title = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = { finish() }) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                                Text(diskName!!, fontSize = 20.sp, fontWeight = FontWeight.Bold, )
-                            }
-                        })
-                    }
-                ) {  player ->
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(160.dp)
-                                    .padding(horizontal = 16.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AsyncImage(
-                                    model = diskCover,
-                                    contentDescription = "Cover",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                        }
-                        if (songList.isNotEmpty()) {
-                            items(songList) { song ->
-                                SongItem(
-                                    song,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(10.dp)
-                                        .clickable {
-                                            scope.launch {
-                                                player.playAtNow(song)
-                                            }
-                                        }) {
-                                    scope.launch {
-                                        player.playAtNext(song)
-                                    }
-                                }
-                                HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
-                            }
-                        } else {
-                            if (showErrorInfo) {
-                                item {
-                                    Text(text = errorInfo, modifier = Modifier.padding(16.dp))
-                                }
-                            }
-
-                        }
-                    }
-                }
-            }
-        }
         id = intent.getLongExtra("id", 0)
         lifecycleScope.launch {
             try {
                 val diskDetail = getDiskDetail(id, page)
                 songSize = diskDetail.songnum
-//                diskName = diskDetail.title
-//                diskCover = diskDetail.picurl
                 songList.addAll(diskDetail.songs)
                 page++
             } catch (e: Exception) {
@@ -178,13 +87,94 @@ class DiskDisplayActivity : ComponentActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    override fun SetupUI() {
+        val scope = rememberCoroutineScope()
+        val listState = rememberLazyListState()
+        var isLoading by remember { mutableStateOf(false) }
 
-        if (keyCode == KeyEvent.KEYCODE_BACK && isExpanded) {
-            isExpanded = false
-            return true
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size }
+                .collect { visibleItemCount ->
+                    val totalItemCount = listState.layoutInfo.totalItemsCount
+                    if (totalItemCount < songSize) {
+                        if (visibleItemCount >= totalItemCount - 5 && !isLoading) {
+                            isLoading = true
+                            val diskDetail = getDiskDetail(id, page)
+                            songList.addAll(diskDetail.songs)
+                            page++
+                            isLoading = false
+                        }
+                    }
+                }
         }
-        return super.onKeyDown(keyCode, event)
+
+        WithMusicBar(topBar = {
+            TopAppBar(title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { finish() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                    Text(diskName, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            })
+        }
+        ) { player ->
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AsyncImage(
+                            model = diskCover,
+                            contentDescription = "Cover",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+                if (songList.isNotEmpty()) {
+                    items(songList) { song ->
+                        SongItem(
+                            song,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                                .clickable {
+                                    scope.launch {
+                                        player.playAtNow(song)
+                                    }
+                                }) {
+                            scope.launch {
+                                player.playAtNext(song)
+                            }
+                        }
+                        HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
+                    }
+                } else {
+                    if (showErrorInfo) {
+                        item {
+                            Text(text = errorInfo, modifier = Modifier.padding(16.dp))
+                        }
+                    }
+
+                }
+            }
+        }
     }
 
     companion object {

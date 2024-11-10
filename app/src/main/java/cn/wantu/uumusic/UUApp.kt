@@ -1,34 +1,29 @@
-package cn.wantu.uumusic;
+package cn.wantu.uumusic
 
-import android.app.Application;
-import android.content.Context;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
+import android.app.Application
+import android.content.Context
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 
-public class UUApp extends Application {
+class UUApp : Application() {
 
-    private static UUApp instance;
-    private static OkHttpClient client;
+    companion object {
+        @get:Synchronized
+        lateinit var instance: UUApp
+            private set
+        lateinit var client: OkHttpClient
+            private set
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        instance = this;
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-        client = new OkHttpClient.Builder()
-                .addInterceptor(logging).build();
-
+        val context: Context
+            get() = instance.applicationContext
     }
 
-    public synchronized static UUApp getInstance() {
-        return instance;
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        val logging = HttpLoggingInterceptor()
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+        client = OkHttpClient.Builder()
+            .addInterceptor(logging).build()
     }
-    public static Context getContext(){
-        return instance.getApplicationContext();
-    }
-    public static OkHttpClient getClient(){
-        return client;
-    }
-
 }

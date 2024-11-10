@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,21 +10,34 @@ plugins {
 
 android {
     namespace = "cn.wantu.uumusic"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "cn.wantu.uumusic"
         minSdk = 24
         targetSdk = 34
-        versionCode = 24102201
-        versionName = "0.0.2"
+        versionCode = 24111001
+        versionName = "0.0.3-preview"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
+    val keystorePropertiesFile = rootProject.file("local.properties")
+    val keystoreProperties = Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProperties["MYAPP_KEYSTORE_FILE"] as String)
+            storePassword = keystoreProperties["MYAPP_KEYSTORE_PASSWORD"] as String
+            keyAlias = keystoreProperties["MYAPP_KEY_ALIAS"] as String
+            keyPassword = keystoreProperties["MYAPP_KEY_PASSWORD"] as String
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -32,6 +48,7 @@ android {
             isDebuggable = false
             isJniDebuggable = false
             multiDexEnabled = true
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -52,6 +69,17 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    applicationVariants.all {
+        outputs.all {
+            val buildTypeName = buildType.name
+            val versionName = android.defaultConfig.versionName
+
+            // 自定义 APK 名称格式，例如：app-v1.0.0-release-20231026_1230.apk
+            val apkName = "uuMusic-v${versionName}-${buildTypeName}.apk"
+
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = apkName
+        }
+    }
 }
 
 dependencies {
@@ -70,6 +98,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.documentfile)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

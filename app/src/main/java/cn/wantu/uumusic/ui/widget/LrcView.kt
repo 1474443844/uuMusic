@@ -27,8 +27,6 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 
-class LrcView {
-}
 data class LrcMetadata(
     val title: String? = null,
     val artist: String? = null,
@@ -128,7 +126,8 @@ fun LyricsScreen(lyrics: List<LyricLine>, currentTime: Long, metadata: LrcMetada
 
     // 自动滚动到当前歌词
     LaunchedEffect(currentIndex) {
-        if (!isUserScrolling) {
+        println("currentIndex: $currentIndex")
+        if (!isUserScrolling && currentIndex != -1) {
             listState.animateScrollToItem(index = currentIndex)
         }
     }
