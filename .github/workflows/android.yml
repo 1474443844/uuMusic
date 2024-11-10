@@ -46,7 +46,7 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Upload APK asset to Release
         if: success()  # Only upload if the release was created successfully
@@ -57,7 +57,7 @@ jobs:
           asset_name: "uuMusic-release-${{ github.run_number }}.apk"  # You can modify the name as needed
           asset_content_type: application/vnd.android.package-archive
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 #
 #  release:
 #    needs: build
