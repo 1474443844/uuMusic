@@ -36,6 +36,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
+      - name: Debug file
+        run: "echo ${{ steps.create_release.outputs.upload_url }}"
+
       - name: Upload APK to GitHub Release
         if: success()  # Only proceed if the build is successful
         id: create_release
@@ -59,25 +62,3 @@ jobs:
           asset_content_type: application/vnd.android.package-archive
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-#
-#  release:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    if: github.event_name == 'push'
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#
-#      - name: Download Release APK
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: app-release
-#          path: app/release/
-#
-#      - name: Create GitHub Release
-#        uses: softprops/action-gh-release@v4
-#        with:
-#          files: app/release/app-release.apk
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
