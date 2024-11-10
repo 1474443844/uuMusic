@@ -36,8 +36,8 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
-      - name: Debug file
-        run: "echo ${{ steps.create_release.outputs.upload_url }}"
+      - name: List files in app/release
+        run: ls -alh app/release/
 
       - name: Upload APK to GitHub Release
         if: success()  # Only proceed if the build is successful
