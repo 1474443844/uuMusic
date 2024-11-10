@@ -27,7 +27,6 @@ import cn.wantu.uumusic.ui.widget.parseLrcString
 
 class SongDisplayActivity : DefaultActivity() {
     private val player = MusicPlayerController.getInstance()
-    private var id = player.playList[player.currentPlayingIndex].id
 
     @Composable
     override fun SetupUI() {
@@ -39,7 +38,6 @@ class SongDisplayActivity : DefaultActivity() {
     }
 
     override fun doBeforeUI() {
-        println(id)
     }
 
     companion object{
@@ -50,12 +48,12 @@ class SongDisplayActivity : DefaultActivity() {
     }
     @Composable
     fun LyricsApp() {
-        val player = MusicPlayerController.getInstance()
         var lrcFile by remember { mutableStateOf<LrcFile?>(null) }
 
         // 模拟从网络获取歌词
-        LaunchedEffect(id) {
-            val lrcContent = getMusicLrc(id)
+        LaunchedEffect(player.currentPlayingIndex, player.playList) {
+            val lrcContent = getMusicLrc(player.playList[player.currentPlayingIndex].id)
+
             lrcFile = parseLrcString(lrcContent)
         }
 
