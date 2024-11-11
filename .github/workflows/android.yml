@@ -36,15 +36,12 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
-      - name: List files in app/release
-        run: ls -alh app/release/
-
       - name: Upload APK to GitHub Release
         if: success()  # Only proceed if the build is successful
         id: create_release
         uses: actions/create-release@v1.1.4
         with:
-          tag_name: v0.0.3-preview  # You can change this to use a version number from your Gradle file
+          tag_name: v0.0.3-preview_$(date "+%Y-%m-%d %H:%M:%S")  # You can change this to use a version number from your Gradle file
           release_name: "v0.0.3-preview"
           body: "重构歌曲播放逻辑, 交互更加丝滑"
           draft: false
