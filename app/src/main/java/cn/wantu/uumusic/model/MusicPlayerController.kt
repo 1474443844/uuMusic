@@ -77,7 +77,7 @@ import java.io.FileOutputStream
 class MusicPlayerController private constructor() {
 
     // 播放器
-    private val player: ExoPlayer
+    val player: ExoPlayer
 
     // 是否在播放
     var isPlaying by mutableStateOf(false)

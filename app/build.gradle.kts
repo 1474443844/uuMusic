@@ -71,11 +71,10 @@ android {
     }
     applicationVariants.all {
         outputs.all {
-            val buildTypeName = buildType.name
             val versionName = android.defaultConfig.versionName
 
             // 自定义 APK 名称格式，例如：app-v1.0.0-release-20231026_1230.apk
-            val apkName = "uuMusic-v${versionName}-${buildTypeName}.apk"
+            val apkName = "uuMusic-v${versionName}.apk"
 
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = apkName
         }
@@ -84,8 +83,9 @@ android {
 
 dependencies {
     implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.exoplayer.dash)
-    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
+//    implementation(libs.androidx.media3.exoplayer.dash)
+//    implementation(libs.androidx.media3.ui)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.okhttp)
