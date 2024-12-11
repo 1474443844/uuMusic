@@ -36,6 +36,10 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
         
+      - name: List files in app/release directory
+        run: |
+          ls -la app/release/  # 列出 app/release 目录下的所有文件，包括隐藏文件
+          
       - name: Upload APK to GitHub Release
         if: success()  # Only proceed if the build is successful
         id: create_release
