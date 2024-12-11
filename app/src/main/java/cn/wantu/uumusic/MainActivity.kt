@@ -78,6 +78,7 @@ class MainActivity : DefaultActivity() {
     private var recommendCover by mutableStateOf("")
     private var recommendTitle by mutableStateOf("")
     private var recommendId by mutableLongStateOf(0L)
+
     // Test
 
     private val userInfoEditor =

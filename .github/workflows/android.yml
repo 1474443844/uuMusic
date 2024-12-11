@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'created'
 
     steps:
       - name: Checkout code
@@ -21,6 +22,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
@@ -36,21 +40,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
-      - name: Get unique tag
-        run: |
-          TAG="release-$(date "+%Y%m%d%H%M%S")"
-          echo "C_TAG=$TAG" >> $GITHUB_ENV
-
       - name: Upload APK to GitHub Release
         if: success()  # Only proceed if the build is successful
         id: create_release
         uses: actions/create-release@v1.1.4
         with:
-          tag_name: v0.0.3-preview_${{ GITHUB_ENV.C_TAG }}  # You can change this to use a version number from your Gradle file
-          release_name: "v0.0.3-preview"
-          body: "重构歌曲播放逻辑, 交互更加丝滑"
-          draft: false
-          prerelease: true
+          tag_name: ${{ github.event.release.tag_name }}  # You can change this to use a version number from your Gradle file
+          release_name: ${{ github.event.release.tag_name }}
+          body_path: release_note.md
+          prerelease: github.event.release.prerelease
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
@@ -59,8 +58,8 @@ jobs:
         uses: actions/upload-release-asset@v1.0.1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/release/uuMusic-v0.0.3-preview.apk
-          asset_name: "uuMusic.v0.0.3-preview.apk"  # You can modify the name as needed
+          asset_path: app/release/uuMusic-${{ github.event.release.tag_name }}.apk
+          asset_name: "uuMusic-${{ github.event.release.tag_name }}"  # You can modify the name as needed
           asset_content_type: application/vnd.android.package-archive
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

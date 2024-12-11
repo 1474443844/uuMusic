@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -55,7 +55,7 @@ fun SettingsScreen() {
                 title = { Text("SettingsActivity") },
                 navigationIcon = {
                     IconButton(onClick = { (context as ComponentActivity).finish() }) {
-                        Icon(Icons.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
@@ -159,6 +159,7 @@ private fun Settings () {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun SettingsScreens() {
     val notificationsEnabled = remember { mutableStateOf(true) }
