@@ -48,7 +48,7 @@ jobs:
           tag_name: ${{ github.event.release.tag_name }}  # You can change this to use a version number from your Gradle file
           release_name: ${{ github.event.release.tag_name }}
           body_path: release_note.md
-          prerelease: github.event.release.prerelease
+          prerelease: ${{ github.event.release.prerelease }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
