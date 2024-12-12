@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 24111101,
-      "versionName": "0.0.3-preview",
-      "outputFile": "uuMusic-v0.0.3-preview.apk"
+      "versionCode": 24121101,
+      "versionName": "0.0.3",
+      "outputFile": "uuMusic-v0.0.3.apk"
     }
   ],
   "elementType": "File",
@@ -22,14 +22,14 @@
       "minApi": 28,
       "maxApi": 30,
       "baselineProfiles": [
-        "baselineProfiles/1/uuMusic-v0.0.3-preview.dm"
+        "baselineProfiles/1/uuMusic-v0.0.3.dm"
       ]
     },
     {
       "minApi": 31,
       "maxApi": 2147483647,
       "baselineProfiles": [
-        "baselineProfiles/0/uuMusic-v0.0.3-preview.dm"
+        "baselineProfiles/0/uuMusic-v0.0.3.dm"
       ]
     }
   ],
