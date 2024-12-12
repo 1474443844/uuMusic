@@ -3,4 +3,5 @@
 /.idea
 local.properties
 /app/build
-/app/release
+/app/release/
+/app/src/main/java/cn/wantu/uumuisc/test/
