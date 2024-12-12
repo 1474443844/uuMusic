@@ -11,13 +11,13 @@
       <SelectionState runConfigName="MainActivity2">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ExampleInstrumentedTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="DropdownMenuPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="Test">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="LazyColumnDragAndDropDemo">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

@@ -1,3 +1,5 @@
+@file:kotlin.OptIn(DelicateCoroutinesApi::class)
+
 package cn.wantu.uumusic.model
 
 import android.os.Bundle
@@ -5,6 +7,7 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,12 +23,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +66,11 @@ import cn.wantu.uumusic.R
 import cn.wantu.uumusic.SongDisplayActivity
 import cn.wantu.uumusic.UUApp
 import cn.wantu.uumusic.data.SongInfo
+import cn.wantu.uumusic.extenstions.DraggableItem
+import cn.wantu.uumusic.extenstions.dragContainer
+import cn.wantu.uumusic.extenstions.rememberDragDropState
 import coil.compose.AsyncImage
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -90,8 +98,7 @@ class MusicPlayerController private constructor() {
     val plF = File(UUApp.instance.filesDir, "playingList.json")
 
     // 播放列表
-    var playList = emptyList<PlayListItem>().toMutableStateList()
-        private set
+    val playList = emptyList<PlayListItem>().toMutableStateList()
 
     private val _mCurrentPosition: Long
         get() = player.currentPosition.also {
@@ -141,7 +148,7 @@ class MusicPlayerController private constructor() {
         player.repeatMode = Player.REPEAT_MODE_ALL
         player.prepare()
         GlobalScope.launch {
-            if (plF.exists()){
+            if (plF.exists()) {
                 addList2player(UUApp.json.decodeFromString(plF.readText()))
             }
             while (true) {
@@ -270,7 +277,7 @@ class MusicPlayerController private constructor() {
         player.seekToNext()
     }
 
-    private fun savePlayingList(){
+    private fun savePlayingList() {
         FileOutputStream(plF).use { output ->
             output.write(
                 UUApp.json.encodeToString(
@@ -283,7 +290,7 @@ class MusicPlayerController private constructor() {
     }
 
     private suspend fun addList2player(list: List<PlayListItem>) = withContext(Dispatchers.Main) {
-        for (item in list){
+        for (item in list) {
             playList.add(item)
             val mediaItem = createMediaItem(item.id) // generate MediaItem
             player.addMediaItem(mediaItem) // add MediaItem to player
@@ -297,6 +304,7 @@ class MusicPlayerController private constructor() {
     suspend fun playAtNow(id: Long, song: String, singer: String, cover: String) {
         playAtNow(PlayListItem(id, song, singer, cover))
     }
+
     suspend fun playAtNow(playItem: PlayListItem) {
         pause() // stop Music
         progress = 0f
@@ -334,6 +342,7 @@ class MusicPlayerController private constructor() {
     suspend fun playAtNext(song: SongInfo) {
         playAtNext(id = song.id, song = song.song, singer = song.singer, cover = song.cover)
     }
+
     suspend fun playAtNext(id: Long, song: String, singer: String, cover: String) {
         if (playListCount == 0) {
             playAtNow(id, song, singer, cover)
@@ -350,14 +359,14 @@ class MusicPlayerController private constructor() {
             player.addMediaItem(_mCurrentPlayingIndex + 1 + offset, mediaItem)
             println("should be insert ${currentPlayingIndex + 1 + offset}")
             offset += 1
-        } else if(itemIndex != currentPlayingIndex) {
+        } else if (itemIndex != currentPlayingIndex) {
             println("mediaItemIndex = $itemIndex, currentMediaItemIndex = $_mCurrentPlayingIndex")
             val mediaItem = playList[itemIndex]
             playList.remove(mediaItem)
-            if(itemIndex < currentPlayingIndex){
+            if (itemIndex < currentPlayingIndex) {
                 currentPlayingIndex -= 1
             }
-            playList.add(currentPlayingIndex+offset+1, mediaItem)
+            playList.add(currentPlayingIndex + offset + 1, mediaItem)
             savePlayingList()
             player.moveMediaItem(itemIndex, _mCurrentPlayingIndex + 1 + offset)
             offset += 1
@@ -410,6 +419,13 @@ class MusicPlayerController private constructor() {
 
     fun fixPlayerList() {
 
+    }
+
+    fun drag(from: Int, to: Int) {
+        playList.apply { add(to, removeAt(from)) }
+        player.moveMediaItem(from, to)
+        savePlayingList()
+        currentPlayingIndex = _mCurrentPlayingIndex
     }
 }
 
@@ -514,30 +530,37 @@ fun WithMusicBar(
                         }
                     }
                 }
-                LazyColumn(modifier = Modifier.fillMaxHeight(0.4f)) {
-                    items(player.playListCount) { index ->
-                        HorizontalDivider()
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    scope.launch {
-                                        player.playIndex(index)
-                                    }
-                                }) {
-                            Text(
-                                text = "${player.playList[index].title}—${player.playList[index].singer}",
-                                style = MaterialTheme.typography.titleSmall,
-                                color = if (player.currentPlayingIndex == index) Color.Unspecified else Color.Gray,
+                val listState = rememberLazyListState()
+                val dragDropState =
+                    rememberDragDropState(listState) { fromIndex, toIndex ->
+                        player.drag(fromIndex, toIndex)
+                    }
+                LazyColumn(
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxHeight(0.4f)
+                        .dragContainer(dragDropState)
+                ) {
+                    itemsIndexed(player.playList, key = { _, item -> item.id }) { index, item ->
+                        DraggableItem(dragDropState, index) { isDragging ->
+                            Row(verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .padding(8.dp)
-                                    .weight(1.0f)
-                            )
-                            IconButton(onClick = {
-                                player.remove(index)
-                            }) {
-                                Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                                    .fillMaxWidth()
+                                    .clickable { scope.launch { player.playIndex(index) } }) {
+                                Text(
+                                    text = "${item.title}—${item.singer}",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = if (player.currentPlayingIndex == index) Color.Unspecified else Color.Gray,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .weight(1.0f)
+                                )
+                                IconButton(onClick = {
+                                    player.remove(index)
+                                }) {
+                                    Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                                }
                             }
                         }
                     }
