@@ -8,8 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'created'
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,9 +36,13 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew assembleRelease
+        
+      - name: List files in app/release directory
+        run: |
+          ls -la app/release/  # 列出 app/release 目录下的所有文件，包括隐藏文件
 
       - name: Upload APK asset to Release
-        if: success()
+        if: github.event_name == 'release' && github.event.action == 'created'
         uses: actions/upload-release-asset@v1.0.1
         with:
           upload_url: ${{ github.event.release.upload_url }}
