@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-release-asset@v1.0.1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: app/release/uuMusic-${{ github.event.release.tag_name }}.apk
+          asset_path: app/release/*.apk
           asset_name: "uuMusic-${{ github.event.release.tag_name }}"  # You can modify the name as needed
           asset_content_type: application/vnd.android.package-archive
         env:
