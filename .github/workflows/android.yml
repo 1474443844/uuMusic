@@ -36,11 +36,13 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew assembleRelease
-        
-      - name: List files in app/release directory
-        run: |
-          ls -la app/release/  # 列出 app/release 目录下的所有文件，包括隐藏文件
-
+          
+      - name: Upload APK to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.apk # 或者 app-release.aab
+          path: app/release/uuMusic-v0.0.3.apk
+          
       - name: Upload APK asset to Release
         if: github.event_name == 'release' && github.event.action == 'created'
         uses: actions/upload-release-asset@v1.0.1
