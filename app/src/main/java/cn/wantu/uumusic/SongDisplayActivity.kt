@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import cn.wantu.uumusic.activity.DefaultActivity
-import cn.wantu.uumusic.model.MusicPlayerController
-import cn.wantu.uumusic.model.getMusicLrc
+import cn.wantu.uumusic.controller.MusicPlayerController
+import cn.wantu.uumusic.controller.getMusicLrc
 import cn.wantu.uumusic.ui.widget.LrcFile
 import cn.wantu.uumusic.ui.widget.LyricsScreen
 import cn.wantu.uumusic.ui.widget.parseLrcString

@@ -1,6 +1,6 @@
 @file:kotlin.OptIn(DelicateCoroutinesApi::class)
 
-package cn.wantu.uumusic.model
+package cn.wantu.uumusic.controller
 
 import android.os.Bundle
 import androidx.annotation.OptIn
@@ -65,10 +65,12 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import cn.wantu.uumusic.R
 import cn.wantu.uumusic.SongDisplayActivity
 import cn.wantu.uumusic.UUApp
-import cn.wantu.uumusic.data.SongInfo
+import cn.wantu.uumusic.controller.SettingConfig.downloadDir
+import cn.wantu.uumusic.controller.SettingConfig.isCache
 import cn.wantu.uumusic.extenstions.DraggableItem
 import cn.wantu.uumusic.extenstions.dragContainer
 import cn.wantu.uumusic.extenstions.rememberDragDropState
+import cn.wantu.uumusic.model.SongInfo
 import coil.compose.AsyncImage
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -84,22 +86,24 @@ import java.io.FileOutputStream
 @OptIn(UnstableApi::class)
 class MusicPlayerController private constructor() {
 
-    // 播放器
+    // ExoPlayer
     val player: ExoPlayer
 
-    // 是否在播放
+    // 是否在播放, 默认不在
     var isPlaying by mutableStateOf(false)
         private set
 
-    // 是否准备好了
+    // 是否准备好了, 默认准备好了
     var isPrepared by mutableStateOf(true)
         private set
 
+    // 上一次播放列表配置文件
     val plF = File(UUApp.instance.filesDir, "playingList.json")
 
     // 播放列表
     val playList = emptyList<PlayListItem>().toMutableStateList()
 
+    // 播放器当前的播放位置, 单位毫秒
     private val _mCurrentPosition: Long
         get() = player.currentPosition.also {
             currentPosition = it
@@ -217,13 +221,7 @@ class MusicPlayerController private constructor() {
     }
 
     companion object {
-        val downloadDir = File(UUApp.instance.externalCacheDir, "music").also {
-            val f = File(it, "info")
-            if (!f.exists()) {
-                f.mkdirs()
-            }
-        }
-        var isCache = true
+
 
         @Volatile
         private var instance: MusicPlayerController? = null
@@ -236,14 +234,14 @@ class MusicPlayerController private constructor() {
 
     private suspend fun createMediaItem(id: Long): MediaItem = withContext(Dispatchers.IO) {
         val mediaInfo = if (isCache) {
-            val musicCache = File(downloadDir, "info/$id.json")
+            val musicCache = File(downloadDir, "info/${SettingConfig.quality}/$id.json")
             if (musicCache.exists()) {
                 generateMediaInfo(musicCache)
             } else {
-                getMusicMediaInfo(id)
+                getMusicMediaInfo(id, SettingConfig.quality)
             }
         } else {
-            getMusicMediaInfo(id)
+            getMusicMediaInfo(id, SettingConfig.quality)
         }
         val bundle = Bundle().apply {
             putString("cover", mediaInfo.cover)

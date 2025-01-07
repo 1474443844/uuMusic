@@ -42,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import cn.wantu.uumusic.activity.DefaultActivity
-import cn.wantu.uumusic.data.SongInfo
-import cn.wantu.uumusic.model.WithMusicBar
-import cn.wantu.uumusic.model.getDiskDetail
+import cn.wantu.uumusic.controller.WithMusicBar
+import cn.wantu.uumusic.controller.getDiskDetail
+import cn.wantu.uumusic.model.SongInfo
 import cn.wantu.uumusic.ui.widget.SongItem
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch

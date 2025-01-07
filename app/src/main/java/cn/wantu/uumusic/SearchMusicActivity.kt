@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,9 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import cn.wantu.uumusic.activity.DefaultActivity
-import cn.wantu.uumusic.data.SongInfo
-import cn.wantu.uumusic.model.WithMusicBar
-import cn.wantu.uumusic.model.searchMusicByName
+import cn.wantu.uumusic.controller.WithMusicBar
+import cn.wantu.uumusic.controller.searchMusicByName
+import cn.wantu.uumusic.model.SongInfo
 import cn.wantu.uumusic.ui.widget.MusicItemView
 import kotlinx.coroutines.launch
 
@@ -68,7 +69,6 @@ class SearchMusicActivity : DefaultActivity() {
                 }
         }
         WithMusicBar { player ->
-
             Column(
                 modifier = Modifier
                     .systemBarsPadding()
@@ -84,10 +84,17 @@ class SearchMusicActivity : DefaultActivity() {
                         .fillMaxWidth(),
                     singleLine = true,
                     trailingIcon = {
-                        Icon(
-                            Icons.Filled.Search,
-                            contentDescription = "搜索图标"
-                        )
+                        IconButton(onClick = {
+                            scope.launch {
+                                searchResults.addAll(searchMusicByName(query))
+                                page = 2
+                            }
+                        }) {
+                            Icon(
+                                Icons.Filled.Search,
+                                contentDescription = "搜索图标"
+                            )
+                        }
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(

@@ -1,21 +1,22 @@
-package cn.wantu.uumusic.model
+package cn.wantu.uumusic.controller
 
 import androidx.core.net.toUri
 import cn.wantu.uumusic.UUApp
 import cn.wantu.uumusic.UUApp.Companion.json
-import cn.wantu.uumusic.data.DiskDetail
-import cn.wantu.uumusic.data.DiskInfo
-import cn.wantu.uumusic.data.MediaInfo
-import cn.wantu.uumusic.data.QQInfo
-import cn.wantu.uumusic.data.SongInfo
-import cn.wantu.uumusic.data.UserInfo
+import cn.wantu.uumusic.controller.SettingConfig.downloadDir
+import cn.wantu.uumusic.controller.SettingConfig.isCache
+import cn.wantu.uumusic.model.DiskDetail
+import cn.wantu.uumusic.model.DiskInfo
+import cn.wantu.uumusic.model.MediaInfo
+import cn.wantu.uumusic.model.QQInfo
+import cn.wantu.uumusic.model.SongInfo
+import cn.wantu.uumusic.model.UserInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 
 private const val baseUrl = "https://api.vkeys.cn/v2/music/tencent"
@@ -78,17 +79,17 @@ suspend fun getDiskDetail(id: Long, page: Int = 1): DiskDetail = withContext(Dis
 suspend fun generateMediaInfo(f: File) : MediaInfo = withContext(Dispatchers.IO){
     json.decodeFromString(f.readText())
 }
-suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dispatchers.IO) {
+suspend fun getMusicMediaInfo(id: Long, q: Int): MediaInfo = withContext(Dispatchers.IO) {
     val data = baseRequest("/geturl?id=$id&quality=$q").getJSONObject("data")
     var url = data.getString("url")
     if (!checkDownloadUrl(url)) {
         url = baseRequest("/geturl?id=$id").getJSONObject("data").getString("url")
     }
-    if (MusicPlayerController.isCache) {
+    if (isCache) {
         val song = data.getString("song")
         val singer = data.getString("singer")
-        val destination = File(MusicPlayerController.downloadDir, "${song}-$singer".replace("/", "&"))
-        val lrcFile = File(MusicPlayerController.downloadDir, "${song}-$singer.lrc".replace("/", "&"))
+        val destination = File(downloadDir, "${song}-$singer".replace("/", "&"))
+        val lrcFile = File(downloadDir, "${song}-$singer.lrc".replace("/", "&"))
         if (downloadFile(url, destination)) {
             val mediaInfo = MediaInfo(
                 song = song,
@@ -98,13 +99,11 @@ suspend fun getMusicMediaInfo(id: Long, q: Int = 8): MediaInfo = withContext(Dis
                 lrc = lrcFile.toUri().toString(),
                 cover = data.getString("cover")
             )
-            FileOutputStream(File(MusicPlayerController.downloadDir, "info/$id.json")).use { output ->
-                output.write(
-                    json.encodeToString(
-                        mediaInfo
-                    ).toByteArray()
+            File(downloadDir, "info/${SettingConfig.quality}/$id.json").writeText(
+                json.encodeToString(
+                    mediaInfo
                 )
-            }
+            )
             return@withContext mediaInfo
         }
     }

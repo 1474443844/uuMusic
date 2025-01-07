@@ -35,8 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.wantu.uumusic.R
-import cn.wantu.uumusic.data.DiskInfo
-import cn.wantu.uumusic.data.SongInfo
+import cn.wantu.uumusic.model.DiskInfo
+import cn.wantu.uumusic.model.SongInfo
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter

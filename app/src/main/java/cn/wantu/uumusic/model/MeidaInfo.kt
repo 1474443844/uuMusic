@@ -1,4 +1,4 @@
-package cn.wantu.uumusic.data
+package cn.wantu.uumusic.model
 
 import kotlinx.serialization.Serializable
 

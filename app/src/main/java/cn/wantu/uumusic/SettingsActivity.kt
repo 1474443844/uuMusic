@@ -1,8 +1,9 @@
 package cn.wantu.uumusic
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
@@ -29,14 +30,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.wantu.uumusic.activity.DefaultActivity
 import cn.wantu.uumusic.ui.theme.UUMusicTheme
 
 
-class SettingsActivity : ComponentActivity() {
+class SettingsActivity : DefaultActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            SettingsScreen()
+    }
+
+    @Composable
+    override fun SetupUI() = SettingsScreen()
+
+    override fun doBeforeUI() {}
+
+    companion object {
+        fun gotoSettingsActivity(context: Context) {
+            context.startActivity(Intent(context, SearchMusicActivity::class.java))
         }
     }
 }

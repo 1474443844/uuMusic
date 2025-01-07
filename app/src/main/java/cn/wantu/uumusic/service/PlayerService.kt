@@ -4,7 +4,7 @@ import android.content.Intent
 import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import cn.wantu.uumusic.model.MusicPlayerController
+import cn.wantu.uumusic.controller.MusicPlayerController
 
 class PlayerService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
