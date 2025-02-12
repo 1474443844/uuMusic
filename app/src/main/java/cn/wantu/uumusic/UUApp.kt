@@ -1,11 +1,8 @@
 package cn.wantu.uumusic
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
-import android.os.Build
 import androidx.annotation.OptIn
 import androidx.lifecycle.LifecycleObserver
 import androidx.media3.common.util.UnstableApi
@@ -40,7 +37,6 @@ class UUApp : Application(), LifecycleObserver {
         logging.setLevel(HttpLoggingInterceptor.Level.BODY)
         client = OkHttpClient.Builder()
             .addInterceptor(logging).build()
-//        createNotificationChannel()
         val sessionToken =
             SessionToken(this, ComponentName(this, MusicService::class.java))
         val mediaControllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
@@ -50,19 +46,4 @@ class UUApp : Application(), LifecycleObserver {
         }, MoreExecutors.directExecutor())
     }
 
-    @OptIn(UnstableApi::class)
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                MusicService.CHANNEL_ID,
-                getString(R.string.notification_channel_name),
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = getString(R.string.notification_channel_desc)
-            }
-            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
-    }
-    
 }
