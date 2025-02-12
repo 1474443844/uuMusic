@@ -119,7 +119,7 @@ class SongDisplayActivity : DefaultActivity() {
             },
             valueRange = 0f..player.duration.toFloat(),  // 设置范围
             onValueChangeFinished = {
-                player.player.seekTo(sliderPosition.toLong())
+                MusicPlayerController.player.seekTo(sliderPosition.toLong())
             },
             modifier = modifier
         )

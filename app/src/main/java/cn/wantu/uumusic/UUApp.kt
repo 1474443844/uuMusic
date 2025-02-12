@@ -1,8 +1,20 @@
 package cn.wantu.uumusic
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
+import android.os.Build
+import androidx.annotation.OptIn
 import androidx.lifecycle.LifecycleObserver
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import cn.wantu.uumusic.controller.MusicPlayerController
+import cn.wantu.uumusic.service.MusicService
+import cn.wantu.uumusic.service.PlayerService
+import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -28,7 +40,29 @@ class UUApp : Application(), LifecycleObserver {
         logging.setLevel(HttpLoggingInterceptor.Level.BODY)
         client = OkHttpClient.Builder()
             .addInterceptor(logging).build()
+//        createNotificationChannel()
+        val sessionToken =
+            SessionToken(this, ComponentName(this, MusicService::class.java))
+        val mediaControllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
+        mediaControllerFuture.addListener({
+            val player = mediaControllerFuture.get()
+            MusicPlayerController.setController(player)
+        }, MoreExecutors.directExecutor())
+    }
 
+    @OptIn(UnstableApi::class)
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                PlayerService.CHANNEL_ID,
+                getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = getString(R.string.notification_channel_desc)
+            }
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
     }
     
 }

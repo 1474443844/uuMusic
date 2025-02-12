@@ -57,11 +57,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DataSource
-import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaController
 import cn.wantu.uumusic.R
 import cn.wantu.uumusic.SongDisplayActivity
 import cn.wantu.uumusic.UUApp
@@ -85,9 +81,6 @@ import java.io.FileOutputStream
 
 @OptIn(UnstableApi::class)
 class MusicPlayerController private constructor() {
-
-    // ExoPlayer
-    val player: ExoPlayer
 
     // 是否在播放, 默认不在
     var isPlaying by mutableStateOf(false)
@@ -139,33 +132,8 @@ class MusicPlayerController private constructor() {
 
     private var offset = 0
 
-    // 初始化媒体播放器
-    init {
-        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            .setAllowCrossProtocolRedirects(true) // 允许跨协议重定向（https -> http）
-        val dataSourceFactory: DataSource.Factory =
-            DefaultDataSource.Factory(UUApp.context, httpDataSourceFactory)
-        player = ExoPlayer.Builder(UUApp.instance)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-            .build()
-        setupPlayerListener()
-        player.repeatMode = Player.REPEAT_MODE_ALL
-        player.prepare()
 
-        GlobalScope.launch {
-            if (plF.exists()) {
-                addList2player(UUApp.json.decodeFromString(plF.readText()))
-            }
-            while (true) {
-                if (isPlaying) {
-                    updateProgress()
-                    delay(100)
-                }
-            }
-        }
-    }
-
-    private fun setupPlayerListener() {
+    fun setupPlayerListener() {
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlayingNow: Boolean) {
                 isPlaying = isPlayingNow
@@ -213,15 +181,32 @@ class MusicPlayerController private constructor() {
                     }
 
                     Player.MEDIA_ITEM_TRANSITION_REASON_SEEK -> { // 2
-//                            TODO()
+                        currentPlayingIndex = _mCurrentPlayingIndex
+                        progress = 0f
                     }
                 }
 
             }
         })
+        player.repeatMode = Player.REPEAT_MODE_ALL
+        player.prepare()
+
+        GlobalScope.launch {
+            if (plF.exists()) {
+                addList2player(UUApp.json.decodeFromString(plF.readText()))
+            }
+            while (true) {
+                if (isPlaying) {
+                    updateProgress()
+                    delay(100)
+                }
+            }
+        }
     }
 
     companion object {
+
+        lateinit var player: Player
 
         @Volatile
         private var instance: MusicPlayerController? = null
@@ -230,6 +215,10 @@ class MusicPlayerController private constructor() {
             instance ?: synchronized(this) {
                 instance ?: MusicPlayerController().also { instance = it }
             }
+        fun setController(controller: MediaController) {
+            player = controller
+            instance?.setupPlayerListener()
+        }
     }
 
     private suspend fun createMediaItem(id: Long): MediaItem = withContext(Dispatchers.IO) {

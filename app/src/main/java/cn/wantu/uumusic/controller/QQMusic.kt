@@ -76,9 +76,7 @@ suspend fun getDiskDetail(id: Long, page: Int = 1): DiskDetail = withContext(Dis
     )
 }
 
-suspend fun generateMediaInfo(f: File) : MediaInfo = withContext(Dispatchers.IO){
-    json.decodeFromString(f.readText())
-}
+fun generateMediaInfo(f: File): MediaInfo = json.decodeFromString(f.readText())
 suspend fun getMusicMediaInfo(id: Long, q: Int): MediaInfo = withContext(Dispatchers.IO) {
     val data = baseRequest("/geturl?id=$id&quality=$q").getJSONObject("data")
     var url = data.getString("url")

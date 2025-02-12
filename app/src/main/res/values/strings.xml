@@ -13,4 +13,6 @@
     <string name="settings">Settings</string>
     <string name="my_song_list">My song list</string>
     <string name="empty_song_list">No song list available</string>
+    <string name="notification_channel_name">test</string>
+    <string name="notification_channel_desc">this is a test</string>
 </resources>
