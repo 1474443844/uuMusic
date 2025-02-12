@@ -1,6 +1,5 @@
 package cn.wantu.uumusic
 
-import android.content.ComponentName
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -51,22 +50,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
 import cn.wantu.uumusic.activity.DefaultActivity
-import cn.wantu.uumusic.controller.SettingConfig
-import cn.wantu.uumusic.controller.SettingConfig.downloadDir
 import cn.wantu.uumusic.controller.WithMusicBar
-import cn.wantu.uumusic.controller.generateMediaInfo
 import cn.wantu.uumusic.controller.getQQInfo
 import cn.wantu.uumusic.controller.getRecommendSong
 import cn.wantu.uumusic.model.DiskInfo
-import cn.wantu.uumusic.service.PlayerService
 import cn.wantu.uumusic.ui.widget.ArtistSection
 import cn.wantu.uumusic.ui.widget.BannerSection
 import cn.wantu.uumusic.ui.widget.NewSongsSection
@@ -82,7 +72,6 @@ import kotlinx.serialization.encodeToString
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
-import java.util.concurrent.ExecutionException
 
 class MainActivity : DefaultActivity() {
 
@@ -202,50 +191,7 @@ class MainActivity : DefaultActivity() {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
                 item {
                     BannerSection(recommendCover, recommendTitle, modifier = Modifier.clickable {
-                        val sessionToken = SessionToken(
-                            this@MainActivity, ComponentName(
-                                this@MainActivity,
-                                PlayerService::class.java
-                            )
-                        )
-                        var mediaController: MediaController? = null
 
-                        var mediaControllerFuture =
-                            MediaController.Builder(this@MainActivity, sessionToken).buildAsync()
-                        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-                        mediaControllerFuture.addListener({
-                            try {
-                                mediaController = mediaControllerFuture.get()
-                                val mediaInfo = generateMediaInfo(
-                                    File(
-                                        downloadDir,
-                                        "info/${SettingConfig.quality}/214003654.json"
-                                    )
-                                )
-                                val mediaMetadata = MediaMetadata.Builder()
-                                    .setTitle(mediaInfo.song)
-                                    .setArtist(mediaInfo.singer)
-                                    .setAlbumTitle(mediaInfo.album)
-                                    .build()
-
-                                mediaController?.setMediaItem(
-                                    MediaItem.Builder()
-                                        .setMediaId("214003654")
-                                        .setUri(mediaInfo.url)
-                                        .setMediaMetadata(mediaMetadata)
-                                        .build()
-                                )  // 或者使用 addMediaItem 添加多个
-                                mediaController?.prepare()
-                                mediaController?.play()
-                            } catch (e: ExecutionException) {
-                                // 捕获异步任务的异常
-                                println("绑定失败: ${e.cause?.message}")
-//                                showToast("无法连接到播放服务")
-                            } catch (e: InterruptedException) {
-                                Thread.currentThread().interrupt()
-                            }
-
-                        }, ContextCompat.getMainExecutor(UUApp.instance))
                         if (recommendId != 0L) {
                             scope.launch {
 //                                MusicPlayerController.getInstance().playAtNow(recommendId)

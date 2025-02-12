@@ -217,7 +217,7 @@ class MusicPlayerController private constructor() {
             }
         fun setController(controller: MediaController) {
             player = controller
-            instance?.setupPlayerListener()
+            getInstance().setupPlayerListener()
         }
     }
 

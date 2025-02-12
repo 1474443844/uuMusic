@@ -74,7 +74,6 @@ class NewActivity : DefaultActivity() {
                             moveTo(19f, 2f)
                             horizontalLineToRelative(-18f)
                             verticalLineToRelative(18f)
-//画到左下角结束
 
                         }
                     }
