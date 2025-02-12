@@ -233,8 +233,8 @@ class MusicPlayerController private constructor() {
     }
 
     private suspend fun createMediaItem(id: Long): MediaItem = withContext(Dispatchers.IO) {
+        val musicCache = File(downloadDir, "info/${SettingConfig.quality}/$id.json")
         val mediaInfo = if (isCache) {
-            val musicCache = File(downloadDir, "info/${SettingConfig.quality}/$id.json")
             if (musicCache.exists()) {
                 generateMediaInfo(musicCache)
             } else {

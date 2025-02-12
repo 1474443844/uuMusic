@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -119,7 +118,12 @@ fun parseLrcFile(inputStream: InputStream): List<LyricLine> {
     return lyrics.sortedBy { it.time }
 }
 @Composable
-fun LyricsScreen(lyrics: List<LyricLine>, currentTime: Long, metadata: LrcMetadata) {
+fun LyricsScreen(
+    lyrics: List<LyricLine>,
+    currentTime: Long,
+    metadata: LrcMetadata,
+    modifier: Modifier = Modifier
+) {
     val currentIndex = lyrics.indexOfLast { it.time <= currentTime }
     val listState = rememberLazyListState()
     var isUserScrolling by remember { mutableStateOf(false) }
@@ -132,23 +136,10 @@ fun LyricsScreen(lyrics: List<LyricLine>, currentTime: Long, metadata: LrcMetada
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .background(Color.Black)
     ) {
         // 显示元数据（标题和艺术家）
-        Text(
-            text = metadata.title ?: "未知标题",
-            color = Color.White,
-            fontSize = 24.sp,
-            modifier = Modifier.padding(16.dp)
-        )
-        Text(
-            text = metadata.artist ?: "未知艺术家",
-            color = Color.Gray,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-        )
 
         // 显示歌词列表
         LazyColumn(
@@ -160,7 +151,7 @@ fun LyricsScreen(lyrics: List<LyricLine>, currentTime: Long, metadata: LrcMetada
                     detectDragGestures(
                         onDragStart = { isUserScrolling = true },
                         onDragEnd = { isUserScrolling = false },
-                        onDrag = {_, _ ->
+                        onDrag = { _, _ ->
                         }
                     )
                 }

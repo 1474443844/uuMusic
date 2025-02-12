@@ -17,7 +17,6 @@ class PlayerService : MediaSessionService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
-        /*TODO("Not yet implemented")*/
         return mediaSession
     }
 
