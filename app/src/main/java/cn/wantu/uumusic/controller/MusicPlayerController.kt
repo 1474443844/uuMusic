@@ -2,7 +2,7 @@
 
 package cn.wantu.uumusic.controller
 
-import android.os.Bundle
+import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -232,14 +232,11 @@ class MusicPlayerController private constructor() {
         } else {
             getMusicMediaInfo(id, SettingConfig.quality)
         }
-        val bundle = Bundle().apply {
-            putString("cover", mediaInfo.cover)
-        }
         val mediaMetadata = MediaMetadata.Builder()
             .setTitle(mediaInfo.song)
             .setArtist(mediaInfo.singer)
             .setAlbumTitle(mediaInfo.album)
-            .setExtras(bundle)
+            .setArtworkUri(Uri.parse(mediaInfo.cover))
             .build()
         MediaItem.Builder()
             .setMediaId(id.toString())

@@ -13,7 +13,6 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import cn.wantu.uumusic.controller.MusicPlayerController
 import cn.wantu.uumusic.service.MusicService
-import cn.wantu.uumusic.service.PlayerService
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -33,6 +32,7 @@ class UUApp : Application(), LifecycleObserver {
         val json = Json { ignoreUnknownKeys = true }
     }
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -54,7 +54,7 @@ class UUApp : Application(), LifecycleObserver {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                PlayerService.CHANNEL_ID,
+                MusicService.CHANNEL_ID,
                 getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
