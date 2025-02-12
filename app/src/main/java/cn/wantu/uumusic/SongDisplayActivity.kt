@@ -48,6 +48,11 @@ class SongDisplayActivity : DefaultActivity() {
         var lrcFile by remember { mutableStateOf<LrcFile?>(null) }
         var title by remember { mutableStateOf("未知标题") }
         var artist by remember { mutableStateOf("未知艺术家") }
+        var sliderPosition by remember { mutableFloatStateOf(player.progress) }
+
+        LaunchedEffect(player.progress) { // 检测进度变化，更新进度条
+            sliderPosition = player.progress
+        }
         // 模拟从网络获取歌词
         LaunchedEffect(player.currentPlayingIndex, player.playList) {
             val currentSong = player.playList[player.currentPlayingIndex]
@@ -98,31 +103,23 @@ class SongDisplayActivity : DefaultActivity() {
                         Text(text = "加载中...", color = Color.White, fontSize = 18.sp)
                     }
                 }
-
-                SeekBar(modifier = Modifier.padding(16.dp))
+                Slider(
+                    value = sliderPosition,
+                    onValueChange = {
+                        sliderPosition = it
+                    },
+                    valueRange = 0f..1f,  // 设置范围
+                    onValueChangeFinished = {
+                        player.seekTo(progress = sliderPosition)
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         }
     }
 
     override fun doBeforeUI() {
 
-    }
-
-    @Composable
-    fun SeekBar(modifier: Modifier = Modifier) {
-
-        var sliderPosition by remember { mutableFloatStateOf(player.currentPosition.toFloat()) }
-        Slider(
-            value = sliderPosition,
-            onValueChange = {
-                sliderPosition = it
-            },
-            valueRange = 0f..player.duration.toFloat(),  // 设置范围
-            onValueChangeFinished = {
-                MusicPlayerController.player.seekTo(sliderPosition.toLong())
-            },
-            modifier = modifier
-        )
     }
 
     companion object{

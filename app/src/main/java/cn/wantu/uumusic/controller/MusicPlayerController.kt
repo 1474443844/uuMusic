@@ -369,10 +369,22 @@ class MusicPlayerController private constructor() {
     private fun mPlay(index: Int = currentPlayingIndex) {
         if (isPlaying) return
         if (index in 0 until player.mediaItemCount) {
-            player.seekTo(index, 0)
+            seekTo(index, 0)
             player.play()
             println("currentIndex: $currentPlayingIndex, currentMediaItemIndex: $_mCurrentPlayingIndex")
         }
+    }
+
+    fun seekTo(progress: Float) {
+        seekTo((progress * duration).toLong())
+    }
+
+    fun seekTo(position: Long) {
+        player.seekTo(position)
+    }
+
+    fun seekTo(index: Int, position: Long) {
+        player.seekTo(index, position)
     }
 
     fun playIndex(index: Int) {

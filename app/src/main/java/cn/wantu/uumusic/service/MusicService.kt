@@ -21,6 +21,11 @@ class MusicService : MediaSessionService() {
     private lateinit var player: Player
     private lateinit var session: MediaSession
 
+    companion object {
+        const val NOTIFICATION_ID = 20050307
+        const val CHANNEL_ID = "uuMusic_channel"
+    }
+
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
@@ -51,8 +56,10 @@ class MusicService : MediaSessionService() {
             )
             .build()
         setMediaNotificationProvider(
-            DefaultMediaNotificationProvider.Builder(applicationContext).build().apply {
+            DefaultMediaNotificationProvider.Builder(applicationContext)
+                .setNotificationId(NOTIFICATION_ID).setChannelId(CHANNEL_ID).build().apply {
                 setSmallIcon(R.drawable.baseline_add_music_24)
+
             }
         )
 
