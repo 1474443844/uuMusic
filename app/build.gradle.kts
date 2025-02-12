@@ -16,8 +16,8 @@ android {
         applicationId = "cn.wantu.uumusic"
         minSdk = 24
         targetSdk = 34
-        versionCode = 24121201
-        versionName = "0.0.4-alpha"
+        versionCode = 25021201
+        versionName = "0.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
