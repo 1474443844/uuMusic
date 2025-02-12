@@ -49,6 +49,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           prerelease: false
           draft: true
+          bodyFile: app/src/main/assets/CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
