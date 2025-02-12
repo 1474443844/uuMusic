@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import androidx.annotation.OptIn
-import androidx.lifecycle.LifecycleObserver
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -15,7 +14,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
-class UUApp : Application(), LifecycleObserver {
+class UUApp : Application() {
 
     companion object {
         @get:Synchronized
@@ -45,18 +44,5 @@ class UUApp : Application(), LifecycleObserver {
             MusicPlayerController.setController(player)
         }, MoreExecutors.directExecutor())
     }
-//
-//    private fun createNotificationChannel() {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            val channel = NotificationChannel(
-//                MusicService.CHANNEL_ID,
-//                getString(R.string.notification_channel_name),
-//                NotificationManager.IMPORTANCE_LOW
-//            ).apply {
-//                description = getString(R.string.notification_channel_desc)
-//            }
-//            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-//            manager.createNotificationChannel(channel)
-//        }
-//    }
+
 }
