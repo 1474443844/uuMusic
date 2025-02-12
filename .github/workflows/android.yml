@@ -48,7 +48,7 @@ jobs:
           tag_name: ${{ github.ref }}  # You can change this to use a version number from your Gradle file
           release_name: Release ${{ github.ref }}
           prerelease: false
-          draft: true
+          draft: false
           body_path: app/src/main/assets/CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
