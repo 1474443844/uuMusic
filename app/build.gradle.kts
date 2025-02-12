@@ -17,7 +17,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 25021301
-        versionName = "0.0.4"
+        versionName = "0.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -72,12 +72,8 @@ android {
     }
     applicationVariants.all {
         outputs.all {
-            val versionName = android.defaultConfig.versionName
-
-            // 自定义 APK 名称格式，例如：app-v1.0.0-release-20231026_1230.apk
-            val apkName = "uuMusic-v${versionName}.apk"
-
-            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = apkName
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                "uuMusic-release.apk"
         }
     }
 }
