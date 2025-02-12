@@ -151,6 +151,7 @@ class MusicPlayerController private constructor() {
         setupPlayerListener()
         player.repeatMode = Player.REPEAT_MODE_ALL
         player.prepare()
+
         GlobalScope.launch {
             if (plF.exists()) {
                 addList2player(UUApp.json.decodeFromString(plF.readText()))
@@ -221,7 +222,6 @@ class MusicPlayerController private constructor() {
     }
 
     companion object {
-
 
         @Volatile
         private var instance: MusicPlayerController? = null

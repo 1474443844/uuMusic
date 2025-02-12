@@ -22,8 +22,5 @@ object SettingConfig {
         }
     }
 
-    init {
-
-    }
 
 }

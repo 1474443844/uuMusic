@@ -38,7 +38,9 @@ class SongDisplayActivity : DefaultActivity() {
     }
 
     override fun doBeforeUI() {
+
     }
+
 
     companion object{
         fun showSongDetails(context: Context) {

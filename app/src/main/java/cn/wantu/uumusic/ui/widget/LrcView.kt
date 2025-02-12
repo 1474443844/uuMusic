@@ -126,7 +126,6 @@ fun LyricsScreen(lyrics: List<LyricLine>, currentTime: Long, metadata: LrcMetada
 
     // 自动滚动到当前歌词
     LaunchedEffect(currentIndex) {
-        println("currentIndex: $currentIndex")
         if (!isUserScrolling && currentIndex != -1) {
             listState.animateScrollToItem(index = currentIndex)
         }

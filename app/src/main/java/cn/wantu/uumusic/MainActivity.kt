@@ -83,7 +83,9 @@ class MainActivity : DefaultActivity() {
 
     private val userInfoEditor =
         UUApp.instance.getSharedPreferences("UserInfo", MODE_PRIVATE)
-    private val file = File(UUApp.instance.filesDir, "diskList.json")
+
+
+    private val diskListCacheFile = File(UUApp.instance.filesDir, "diskList.json")
 
     private var dropDownMenuExpanded by mutableStateOf(false)
     private var showEditQQDialog by mutableStateOf(false)
@@ -98,7 +100,7 @@ class MainActivity : DefaultActivity() {
     private var avatar by mutableStateOf(userInfoEditor.getString("avatar", ""))
     private var isLogin by mutableStateOf(qq != "")
     private var diskList by mutableStateOf(
-        if (file.exists()) UUApp.json.decodeFromString(file.readText())
+        if (diskListCacheFile.exists()) UUApp.json.decodeFromString(diskListCacheFile.readText())
         else emptyList<DiskInfo>()
     )
 
@@ -127,7 +129,7 @@ class MainActivity : DefaultActivity() {
             username = qqInfo.userInfo.name
             avatar = qqInfo.userInfo.pic
             diskList = listOf(qqInfo.likesong) + qqInfo.mydiss + qqInfo.likediss
-            FileOutputStream(file).use { output ->
+            FileOutputStream(diskListCacheFile).use { output ->
                 output.write(
                     UUApp.json.encodeToString(
                         diskList
@@ -163,7 +165,7 @@ class MainActivity : DefaultActivity() {
         isLogin = false
         userInfoEditor.edit().clear().apply()
         diskList = emptyList()
-        file.delete()
+        diskListCacheFile.delete()
     }
     @Composable
     private fun MainLayout() {
