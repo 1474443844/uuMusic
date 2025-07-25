@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -68,7 +69,6 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -105,6 +105,7 @@ class MainActivity : DefaultActivity() {
         else emptyList<DiskInfo>()
     )
 
+    @Preview(showBackground = true)
     @Composable
     override fun SetupUI() = MainLayout()
 

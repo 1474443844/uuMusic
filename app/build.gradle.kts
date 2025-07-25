@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -10,12 +11,12 @@ plugins {
 
 android {
     namespace = "cn.wantu.uumusic"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "cn.wantu.uumusic"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 31
         versionCode = 25021301
         versionName = "0.0.5"
 
@@ -56,14 +57,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -78,7 +73,14 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.fromTarget("17")
+    }
+}
+
 dependencies {
+    implementation(fileTree("libs") { include("*.jar") })
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
 //    implementation(libs.androidx.media3.exoplayer.dash)

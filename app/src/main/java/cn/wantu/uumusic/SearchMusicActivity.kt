@@ -101,6 +101,7 @@ class SearchMusicActivity : DefaultActivity() {
                         onSearch = {
                             // 执行搜索操作
                             scope.launch {
+                                searchResults.clear()
                                 searchResults.addAll(searchMusicByName(query))
                                 page = 2
                             }
